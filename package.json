@@ -1,0 +1,15 @@
+{
+  "name": "sbxinquirer",
+  "version": "1.0.0",
+  "description": "Sandbox for inquirer menus",
+  "main": "menus.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node menus.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "inquirer": "^8.0.0"
+  }
+}
