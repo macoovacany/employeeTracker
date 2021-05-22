@@ -5,7 +5,7 @@
   "main": "menus.js",
   "scripts": {
     "test": "jest",
-    "start": "node menus.js"
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",

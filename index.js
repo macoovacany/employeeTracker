@@ -1,22 +1,15 @@
 const inq = require('inquirer');
-const process  = require('process');
+const process = require('process');
+const mysql = require('mysql2');
 
-
-
-// Add departments
-// Add roles
-// Add  employees
-// View departments
-// View roles
-// View employees
-// Update employee roles
-// Update employee managers
-// View employees by manager
-// Delete departments, 
-// Delete roles, 
-// Delete employees
-// View the total utilized budget of a department -- ie the combined salaries of all employees in that department
-
+// connection is going to be kept open throughout the interface with 
+const CONNECTION = mysql.createConnection({
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    password: '',
+    database: 'EMPLOYEE_TRACKER_DB',
+});
 
 
 const AddDepartment = () => {
@@ -111,16 +104,12 @@ const ViewRoles = () => {
 
 const ViewEmployees = () => {
 
-    console.log('ViewEmployees');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'ViewEmployees',
-            message: 'You need to input a value for ViewEmployees'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
+    console.log('ViewEmployees/n/n');
+    CONNECTION.query(
+        'SELECT * FROM EMPLOYEES;',
+        (err, results, fields) => {
+            if (err) throw err;
+            console.table(results);
             mainMenu();
         });
 
@@ -234,7 +223,11 @@ const ShowSummaries = () => {
 
 };
 
-
+const Quit = () => {
+    console.log('quitting....')
+    CONNECTION.end();
+    process.exit();
+}
 
 mainMenuQuestions = [
     {
@@ -254,7 +247,7 @@ mainMenuQuestions = [
             { name: 'Delete Roles', value: DeleteRoles },
             { name: 'Remove employees', value: RemoveEmployees },
             { name: 'Show summaries', value: ShowSummaries },
-            { name: 'Quit', value: 'Quit' },
+            { name: 'Quit', value: Quit },
         ]
     },
 ];
@@ -263,20 +256,33 @@ mainMenuQuestions = [
 const mainMenu = () => {
     inq.prompt(mainMenuQuestions)
         .then((ans) => {
-            if (ans.menuChoice === 'Quit') {
-                process.exit();
-            }
-
             ans.menuChoice();
-
         });
 }
 
-console.log(`
-**********************************
-Employee and Department Maagement
-*********************************
 
-`);
+// main entry point - straight into the 
+// database checks
+// then call the inquirer UI proper
+CONNECTION.query(
+    'SELECT COUNT(*) as numEmployees FROM EMPLOYEES; ',
+    (err, results, fields) => {
+        if (err) throw err;
+        let numEmployees = results[0].numEmployees;
+        console.log(`
+        **********************************
+        Employee and Department Maagement
+        *********************************
 
-mainMenu()
+        Connected to database with ${numEmployees} employeess.
+        `);
+
+        // enter inqurier mode proper
+        mainMenu();
+    })
+
+    // connection.end();
+
+    // .then(() => {
+    // });
+
