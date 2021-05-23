@@ -2,8 +2,8 @@ const inq = require('inquirer');
 const process = require('process');
 const mysql = require('mysql2');
 
-// connection is going to be kept open throughout the interface with 
-const CONNECTION = mysql.createConnection({
+// conn is going to be kept open throughout the interface with the menus
+const conn = mysql.createConnection({
     host: 'localhost',
     port: 3306,
     user: 'root',
@@ -12,44 +12,167 @@ const CONNECTION = mysql.createConnection({
 });
 
 
-const AddDepartment = () => {
 
-    console.log('AddDepartment');
+// create, read, update and delete queries are called
+// add,    view, modify and remove
+
+// **************************
+// Department queries
+// **************************
+
+const addDepartment = () => {
+    console.log('addDepartment');
     inq.prompt([
         {
             type: 'input',
-            name: 'AddDepartment',
-            message: 'You need to input a value for AddDepartment'
+            name: 'addDepartment',
+            message: 'Add a new department, or enter to bail.'
+        }
+    ])
+        .then((ans) => {
+            console.log(ans);
+            // 
+            let newDepartment = ans.addDepartment.replace(/\s/g, '');
+            if (newDepartment) {
+                conn.query(
+                    'INSERT INTO DEPARTMENTS (DEPARTMENT_NAME) VALUES (?);',
+                    newDepartment,
+                    (err, results, fields) => {
+                        if (err) throw err;
+                        console.table(results);
+                        departmentMenu();
+                    });
+            } else {
+                console.log('No update to departments.');
+                departmentMenu();
+            }
+            
+        });
+};
+
+
+const viewDepartments = () => {
+    console.log('viewDepartments');
+    inq.prompt([
+        {
+            type: 'input',
+            name: 'viewDepartments',
+            message: 'You need to input a value for viewDepartments'
         }
     ])
         .then((ans) => {
             console.log(ans)
-            mainMenu();
+            departmentMenu();
         });
-
 };
 
+const modifyDepartments = () => {
 
-const AddRole = () => {
-
-    console.log('AddRole');
+    console.log('modifyDepartments');
     inq.prompt([
         {
             type: 'input',
-            name: 'AddRole',
-            message: 'You need to input a value for AddRole'
+            name: 'modifyDepartments',
+            message: 'You need to input a value for modifyDepartments'
         }
     ])
         .then((ans) => {
             console.log(ans)
-            mainMenu();
+            departmentMenu();
         });
-
 };
 
 
-const AddEmployee = () => {
+const removeDepartments = () => {
+    console.log('removeDepartments');
+    inq.prompt([
+        {
+            type: 'input',
+            name: 'removeDepartments',
+            message: 'You need to input a value for removeDepartments'
+        }
+    ])
+        .then((ans) => {
+            console.log(ans)
+            departmentMenu();
+        });
+};
 
+
+
+// **************************
+// Role queries
+// **************************
+
+const addRole = () => {
+    console.log('addRole');
+    inq.prompt([
+        {
+            type: 'input',
+            name: 'addRole',
+            message: 'You need to input a value for addRole'
+        }
+    ])
+        .then((ans) => {
+            console.log(ans)
+            rolesMenu();
+        });
+};
+
+const viewRoles = () => {
+    console.log('viewRoles');
+    inq.prompt([
+        {
+            type: 'input',
+            name: 'viewRoles',
+            message: 'You need to input a value for viewRoles'
+        }
+    ])
+        .then((ans) => {
+            console.log(ans)
+            rolesMenu();
+        });
+};
+
+
+const modifyRoles = () => {
+    console.log('modifyRoles');
+    inq.prompt([
+        {
+            type: 'input',
+            name: 'modifyRoles',
+            message: 'You need to input a value for modifyRoles'
+        }
+    ])
+        .then((ans) => {
+            console.log(ans)
+            rolesMenu();
+        });
+};
+
+
+const removeRoles = () => {
+    console.log('removeRoles');
+    inq.prompt([
+        {
+            type: 'input',
+            name: 'removeRoles',
+            message: 'You need to input a value for removeRoles'
+        }
+    ])
+        .then((ans) => {
+            console.log(ans)
+            rolesMenu();
+        });
+};
+
+
+
+// **************************
+// Role queries
+// **************************
+
+const addEmployee = () => {
     console.log('AddEmployee');
     inq.prompt([
         {
@@ -60,142 +183,70 @@ const AddEmployee = () => {
     ])
         .then((ans) => {
             console.log(ans)
-            mainMenu();
+            employeesMenu();
         });
 
 };
 
-
-const ViewDepartments = () => {
-
-    console.log('ViewDepartments');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'ViewDepartments',
-            message: 'You need to input a value for ViewDepartments'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            mainMenu();
-        });
-
-};
-
-
-const ViewRoles = () => {
-
-    console.log('ViewRoles');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'ViewRoles',
-            message: 'You need to input a value for ViewRoles'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            mainMenu();
-        });
-
-};
-
-
-const ViewEmployees = () => {
-
-    console.log('ViewEmployees/n/n');
-    CONNECTION.query(
+const viewEmployees = () => {
+    console.log('viewEmployees/n/n');
+    conn.query(
         'SELECT * FROM EMPLOYEES;',
         (err, results, fields) => {
             if (err) throw err;
             console.table(results);
-            mainMenu();
+            employeesMenu();
         });
-
 };
 
-
-const UpdateEmployee = () => {
-
-    console.log('UpdateEmployee');
+const modifyEmployee = () => {
+    console.log('modifyEmployee');
     inq.prompt([
         {
             type: 'input',
-            name: 'UpdateEmployee',
-            message: 'You need to input a value for UpdateEmployee'
+            name: 'modifyEmployee',
+            message: 'You need to input a value for modifyEmployee'
         }
     ])
         .then((ans) => {
             console.log(ans)
-            mainMenu();
+            employeesMenu();
         });
-
 };
 
-
-const ViewManagers = () => {
-
-    console.log('ViewManagers');
+const removeEmployee = () => {
+    console.log('removeEmployee');
     inq.prompt([
         {
             type: 'input',
-            name: 'ViewManagers',
-            message: 'You need to input a value for ViewManagers'
+            name: 'removeEmployee',
+            message: 'You need to input a value for removeEmployee'
         }
     ])
         .then((ans) => {
             console.log(ans)
-            mainMenu();
+            employeesMenu();
         });
-
 };
 
 
-const DeleteDepartments = () => {
 
-    console.log('DeleteDepartments');
+
+
+
+// *************************
+// Generic reports
+// *************************
+
+
+const viewManagers = () => {
+
+    console.log('viewManagers');
     inq.prompt([
         {
             type: 'input',
-            name: 'DeleteDepartments',
-            message: 'You need to input a value for DeleteDepartments'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            mainMenu();
-        });
-
-};
-
-
-const DeleteRoles = () => {
-
-    console.log('DeleteRoles');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'DeleteRoles',
-            message: 'You need to input a value for DeleteRoles'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            mainMenu();
-        });
-
-};
-
-
-const RemoveEmployees = () => {
-
-    console.log('RemoveEmployees');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'RemoveEmployees',
-            message: 'You need to input a value for RemoveEmployees'
+            name: 'viewManagers',
+            message: 'You need to input a value for viewManagers'
         }
     ])
         .then((ans) => {
@@ -223,38 +274,123 @@ const ShowSummaries = () => {
 
 };
 
+
+
+
 const Quit = () => {
     console.log('quitting....')
-    CONNECTION.end();
+    conn.end();
     process.exit();
 }
 
-mainMenuQuestions = [
-    {
-        type: 'list',
-        name: 'menuChoice',
-        message: 'What would you like to do?',
-        choices: [
-            { name: 'Add department', value: AddDepartment },
-            { name: 'Add role', value: AddRole },
-            { name: 'Add employee', value: AddEmployee },
-            { name: 'View departments', value: ViewDepartments },
-            { name: 'View roles', value: ViewRoles },
-            { name: 'View employees', value: ViewEmployees },
-            { name: 'Update employee', value: UpdateEmployee },
-            { name: 'View managers', value: ViewManagers },
-            { name: 'Delete departments', value: DeleteDepartments },
-            { name: 'Delete Roles', value: DeleteRoles },
-            { name: 'Remove employees', value: RemoveEmployees },
-            { name: 'Show summaries', value: ShowSummaries },
-            { name: 'Quit', value: Quit },
+
+// *************************
+//  * Menu options  ********
+// *************************
+
+const rolesMenu = () => {
+    inq.prompt(
+        [{
+            type: 'list',
+            name: 'menuChoice',
+            message: 'What would you like to do?',
+            choices: [
+                { name: 'add role', value: addRole },
+                { name: 'view roles', value: viewRoles },
+                { name: 'modify a role', value: modifyRoles },
+                { name: 'remove Roles', value: removeRoles },
+                { name: 'Back to Main Menu', value: mainMenu },
+            ]
+        },
         ]
-    },
-];
+    )
+        .then((ans) => {
+            ans.menuChoice();
+        });
+}
+
+const departmentMenu = () => {
+    inq.prompt(
+        [{
+            type: 'list',
+            name: 'menuChoice',
+            message: 'What would you like to do?',
+            choices: [
+                { name: 'Add a department', value: addDepartment },
+                { name: 'view departments', value: viewDepartments },
+                { name: 'modify a department', value: modifyDepartments },
+                { name: 'remove a department', value: removeDepartments },
+                { name: 'Back to Main Menu', value: mainMenu },
+            ]
+        },
+        ]
+    )
+        .then((ans) => {
+            ans.menuChoice();
+        });
+}
+
+
+const employeesMenu = () => {
+    inq.prompt(
+        [{
+            type: 'list',
+            name: 'menuChoice',
+            message: 'What would you like to do?',
+            choices: [
+                { name: 'Add employee', value: addEmployee },
+                { name: 'view employees', value: viewEmployees },
+                { name: 'modify employee', value: modifyEmployee },
+                { name: 'remove employees', value: removeEmployee },
+                { name: 'Back to Main Menu', value: mainMenu },
+            ]
+        },
+        ]
+    )
+        .then((ans) => {
+            ans.menuChoice();
+        });
+}
+
+
+const reportsMenu = () => {
+    inq.prompt(
+        [{
+            type: 'list',
+            name: 'menuChoice',
+            message: 'What would you like to do?',
+            choices: [
+                { name: 'view managers', value: viewManagers },
+                { name: 'Show summaries', value: ShowSummaries },
+                { name: 'Back to Main Menu', value: mainMenu },
+            ]
+        },
+        ]
+    )
+        .then((ans) => {
+            ans.menuChoice();
+        });
+}
+
 
 
 const mainMenu = () => {
-    inq.prompt(mainMenuQuestions)
+    inq.prompt(
+        [
+            {
+                type: 'list',
+                name: 'menuChoice',
+                message: 'What would you like to do?',
+                choices: [
+                    { name: 'Department queries', value: departmentMenu },
+                    { name: 'Roles queries', value: rolesMenu },
+                    { name: 'Employees queries', value: employeesMenu },
+                    { name: 'Reports queries', value: reportsMenu },
+                    { name: 'Quit', value: Quit },
+                ]
+            },
+        ]
+    )
         .then((ans) => {
             ans.menuChoice();
         });
@@ -264,7 +400,7 @@ const mainMenu = () => {
 // main entry point - straight into the 
 // database checks
 // then call the inquirer UI proper
-CONNECTION.query(
+conn.query(
     'SELECT COUNT(*) as numEmployees FROM EMPLOYEES; ',
     (err, results, fields) => {
         if (err) throw err;
@@ -281,7 +417,7 @@ CONNECTION.query(
         mainMenu();
     })
 
-    // connection.end();
+    // conn.end();
 
     // .then(() => {
     // });
