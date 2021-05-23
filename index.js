@@ -38,64 +38,78 @@ const addDepartment = () => {
                     'INSERT INTO DEPARTMENTS (DEPARTMENT_NAME) VALUES (?);',
                     newDepartment,
                     (err, results, fields) => {
-                        if (err) throw err;
-                        console.table(results);
-                        departmentMenu();
+                        if (err) {
+                            switch (err.code) {
+                                case 'ER_DUP_ENTRY':
+                                    results = `${newDepartment} already exists. No update to departments.`;
+                                    break;
+                                default:
+                                    Panic(err);
+                            }
+                        }
+                        if (results.affectedRows === 1) {
+                            departmentMenu(() => {`Added ${newDepartment}.\n` });
+                        }
                     });
             } else {
-                console.log('No update to departments.');
-                departmentMenu();
+                departmentMenu(() => 'No update to departments.');
             }
-            
         });
 };
 
 
 const viewDepartments = () => {
-    console.log('viewDepartments');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'viewDepartments',
-            message: 'You need to input a value for viewDepartments'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            departmentMenu();
-        });
+    console.log('1')
+    conn.query(
+        `SELECT DEPARTMENT_NAME, count(roles.department_id)
+         FROM departments left join roles 
+         ON departments.id = roles.department_id
+        GROUP BY DEPARTMENT_NAME;`,
+        (err, results, fields) => {
+            console.log('2')
+            if (err) { Panic(err) };
+            console.log('3')
+            departmentMenu(() => { console.table(results) });
+        })
 };
 
-const modifyDepartments = () => {
-
-    console.log('modifyDepartments');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'modifyDepartments',
-            message: 'You need to input a value for modifyDepartments'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            departmentMenu();
-        });
-};
+// meaningless action for departments 
+// const modifyDepartments = () => {}
 
 
 const removeDepartments = () => {
-    console.log('removeDepartments');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'removeDepartments',
-            message: 'You need to input a value for removeDepartments'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            departmentMenu();
-        });
+    conn.query(
+        'SELECT * FROM DEPARTMENTS;',
+        (err, results, fields) => {
+            if (err) throw err;
+            departmentList = results.map(element => {
+                return element.DEPARTMENT_NAME;
+            });
+            inq.prompt([
+                {
+                    type: 'list',
+                    name: 'removeDepartmentSelection',
+                    message: 'Which department do you want to remove?',
+                    choices: departmentList
+                }])
+                .then((ans) => {
+                    conn.query(
+                        'DELETE FROM DEPARTMENTS WHERE DEPARTMENT_NAME = ?;',
+                        ans.removeDepartmentSelection,
+                        (err, results, fields) => {
+                            if (err) throw err;
+                            console.log(results.affectedRows === 1)
+                            if (results.affectedRows === 1) {
+                                departmentMenu(() => `${ans.removeDepartmentSelection} removed`);
+                            } else {
+                                // something went wrong...
+                                // console.clear()
+                                Quit();
+                            }
+                        }
+                    )
+                });
+        })
 };
 
 
@@ -277,6 +291,14 @@ const ShowSummaries = () => {
 
 
 
+const Panic = (err) => {
+    console.log('Panic exit - ')
+    console.log(err);
+    conn.end();
+    process.exit();
+
+}
+
 const Quit = () => {
     console.log('quitting....')
     conn.end();
@@ -288,7 +310,10 @@ const Quit = () => {
 //  * Menu options  ********
 // *************************
 
-const rolesMenu = () => {
+const rolesMenu = (prevResults) => {
+    console.clear();
+    console.log(prevResults);
+
     inq.prompt(
         [{
             type: 'list',
@@ -309,7 +334,9 @@ const rolesMenu = () => {
         });
 }
 
-const departmentMenu = () => {
+const departmentMenu = (prevResults = () => { }) => {
+    console.clear();
+    prevResults();
     inq.prompt(
         [{
             type: 'list',
@@ -318,7 +345,7 @@ const departmentMenu = () => {
             choices: [
                 { name: 'Add a department', value: addDepartment },
                 { name: 'view departments', value: viewDepartments },
-                { name: 'modify a department', value: modifyDepartments },
+                // { name: 'modify a department', value: modifyDepartments },
                 { name: 'remove a department', value: removeDepartments },
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
@@ -331,7 +358,10 @@ const departmentMenu = () => {
 }
 
 
-const employeesMenu = () => {
+const employeesMenu = (prevResults) => {
+    console.clear();
+    console.log(prevResults);
+
     inq.prompt(
         [{
             type: 'list',
@@ -353,7 +383,10 @@ const employeesMenu = () => {
 }
 
 
-const reportsMenu = () => {
+const reportsMenu = (prevResults) => {
+    console.clear();
+    console.log(prevResults);
+
     inq.prompt(
         [{
             type: 'list',
@@ -372,9 +405,38 @@ const reportsMenu = () => {
         });
 }
 
+const debugQuery = () => {
+    conn.query(
+        'SELECT * FROM DEPARTMENTS;',
+        (err, results, fields) => {
+            if (err) throw err;
+            departmentList = results.map(element => {
+                return element.DEPARTMENT_NAME;
+            });
+            inq.prompt([
+                {
+                    type: 'list',
+                    name: 'removeDepartmentSelection',
+                    message: 'Which department do you want to remove?',
+                    choices: departmentList
+                }])
+                .then((ans) => {
+                    conn.query(
+                        'DELETE FROM DEPARTMENTS WHERE DEPARTMENT_NAME = ?;',
+                        ans.removeDepartmentSelection,
+                        (err, results, fields) => {
+                            if (err) throw err;
+                        }
+                    )
+                });
+        })
+};
 
 
-const mainMenu = () => {
+const mainMenu = (prevResults) => {
+    console.clear();
+    console.log(prevResults);
+
     inq.prompt(
         [
             {
@@ -386,6 +448,7 @@ const mainMenu = () => {
                     { name: 'Roles queries', value: rolesMenu },
                     { name: 'Employees queries', value: employeesMenu },
                     { name: 'Reports queries', value: reportsMenu },
+                    { name: 'Debug Query', value: debugQuery },
                     { name: 'Quit', value: Quit },
                 ]
             },
@@ -405,16 +468,15 @@ conn.query(
     (err, results, fields) => {
         if (err) throw err;
         let numEmployees = results[0].numEmployees;
-        console.log(`
+
+        // enter inqurier mode proper
+        mainMenu(`
         **********************************
         Employee and Department Maagement
         *********************************
 
         Connected to database with ${numEmployees} employeess.
         `);
-
-        // enter inqurier mode proper
-        mainMenu();
     })
 
     // conn.end();

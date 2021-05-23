@@ -1,8 +1,8 @@
 {
-  "name": "sbxinquirer",
+  "name": "employeeTracker",
   "version": "1.0.0",
-  "description": "Sandbox for inquirer menus",
-  "main": "menus.js",
+  "description": "command line interface to eample employee tracking database.",
+  "main": "index.js",
   "scripts": {
     "test": "jest",
     "start": "node index.js"
