@@ -21,7 +21,7 @@ const conn = mysql.createConnection({
 // **************************
 
 const addDepartment = () => {
-    console.log('addDepartment');
+    console.clear()
     inq.prompt([
         {
             type: 'input',
@@ -38,17 +38,24 @@ const addDepartment = () => {
                     'INSERT INTO DEPARTMENTS (DEPARTMENT_NAME) VALUES (?);',
                     newDepartment,
                     (err, results, fields) => {
+                        console.log(err);
+
+                        // error handling
                         if (err) {
                             switch (err.code) {
                                 case 'ER_DUP_ENTRY':
-                                    results = `${newDepartment} already exists. No update to departments.`;
+                                    returnStr = `${newDepartment} already exists. No update to departments.`;
+                                    departmentMenu(() => { console.log(returnStr); });
                                     break;
                                 default:
-                                    Panic(err);
+                                    throw err;
                             }
                         }
+
+                        // results are OK
                         if (results.affectedRows === 1) {
-                            departmentMenu(() => {`Added ${newDepartment}.\n` });
+                            returnStr = `Added ${newDepartment}.\n`;
+                            departmentMenu(() => { console.log(returnStr); });
                         }
                     });
             } else {
@@ -59,17 +66,15 @@ const addDepartment = () => {
 
 
 const viewDepartments = () => {
-    console.log('1')
+    console.clear()
     conn.query(
         `SELECT DEPARTMENT_NAME, count(roles.department_id)
          FROM departments left join roles 
          ON departments.id = roles.department_id
         GROUP BY DEPARTMENT_NAME;`,
         (err, results, fields) => {
-            console.log('2')
             if (err) { Panic(err) };
-            console.log('3')
-            departmentMenu(() => { console.table(results) });
+            departmentMenu(() => { console.table(results); console.log('\n'); });
         })
 };
 
@@ -78,6 +83,7 @@ const viewDepartments = () => {
 
 
 const removeDepartments = () => {
+    console.clear()
     conn.query(
         'SELECT * FROM DEPARTMENTS;',
         (err, results, fields) => {
@@ -85,6 +91,7 @@ const removeDepartments = () => {
             departmentList = results.map(element => {
                 return element.DEPARTMENT_NAME;
             });
+
             inq.prompt([
                 {
                     type: 'list',
@@ -93,14 +100,31 @@ const removeDepartments = () => {
                     choices: departmentList
                 }])
                 .then((ans) => {
+                    let removeDepartment = ans.removeDepartmentSelection;
+
                     conn.query(
                         'DELETE FROM DEPARTMENTS WHERE DEPARTMENT_NAME = ?;',
-                        ans.removeDepartmentSelection,
+                        removeDepartment,
                         (err, results, fields) => {
-                            if (err) throw err;
+
+                            console.log(err);
+                            // error handling
+                            if (err) {
+                                switch (err.code) {
+                                    case 'ER_ROW_IS_REFERENCED_2':
+                                        returnStr = `${removeDepartment} can not be deleted because it is referenced by some roles.`;
+                                        departmentMenu(() => { console.log(returnStr); });
+                                        break;
+                                    default:
+                                        throw err;
+                                }
+                            }
+
+                            // results ok
                             console.log(results.affectedRows === 1)
                             if (results.affectedRows === 1) {
-                                departmentMenu(() => `${ans.removeDepartmentSelection} removed`);
+                                returnStr = `${ans.removeDepartmentSelection} removed`;
+                                departmentMenu(() => 'returnStr');
                             } else {
                                 // something went wrong...
                                 // console.clear()
@@ -119,7 +143,7 @@ const removeDepartments = () => {
 // **************************
 
 const addRole = () => {
-    console.log('addRole');
+    console.clear()
     inq.prompt([
         {
             type: 'input',
@@ -134,18 +158,17 @@ const addRole = () => {
 };
 
 const viewRoles = () => {
-    console.log('viewRoles');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'viewRoles',
-            message: 'You need to input a value for viewRoles'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            rolesMenu();
-        });
+    console.clear()
+    conn.query(
+        `SELECT roles.title, departments.DEPARTMENT_NAME, count(employees.id)
+        FROM departments inner join roles left join employees
+        on  roles.DEPARTMENT_ID = departments.ID
+            and employees.ROLES_ID = roles.ID
+       group by roles.title;`,
+        (err, results, fields) => {
+            if (err) { Panic(err) };
+            departmentMenu(() => { console.table(results); console.log('\n'); });
+        })
 };
 
 
@@ -293,9 +316,10 @@ const ShowSummaries = () => {
 
 const Panic = (err) => {
     console.log('Panic exit - ')
-    console.log(err);
-    conn.end();
-    process.exit();
+    throw err;
+    // console.log(err);
+    // conn.end();
+    // process.exit();
 
 }
 
@@ -337,11 +361,12 @@ const rolesMenu = (prevResults) => {
 const departmentMenu = (prevResults = () => { }) => {
     console.clear();
     prevResults();
+    console.log('********************************************************')
     inq.prompt(
         [{
             type: 'list',
             name: 'menuChoice',
-            message: 'What would you like to do?',
+            message: 'Department Actions:',
             choices: [
                 { name: 'Add a department', value: addDepartment },
                 { name: 'view departments', value: viewDepartments },
@@ -350,8 +375,7 @@ const departmentMenu = (prevResults = () => { }) => {
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
         },
-        ]
-    )
+        ])
         .then((ans) => {
             ans.menuChoice();
         });
