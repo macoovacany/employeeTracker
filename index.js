@@ -2,15 +2,15 @@ const inq = require('inquirer');
 const process = require('process');
 const mysql = require('mysql2');
 
+
 // conn is going to be kept open throughout the interface with the menus
-const conn = mysql.createConnection({
+const conn =  mysql.createConnection({
     host: 'localhost',
     port: 3306,
     user: 'root',
     password: '',
     database: 'EMPLOYEE_TRACKER_DB',
 });
-
 
 
 // create, read, update and delete queries are called
@@ -20,53 +20,49 @@ const conn = mysql.createConnection({
 // Department queries
 // **************************
 
-const addDepartment = () => {
+const addDepartment = async () => {
     console.clear()
-    inq.prompt([
+    const ans = await inq.prompt([
         {
             type: 'input',
             name: 'addDepartment',
             message: 'Add a new department, or enter to bail.'
         }
     ])
-        .then((ans) => {
-            console.log(ans);
-            // 
-            let newDepartment = ans.addDepartment.replace(/\s/g, '');
-            if (newDepartment) {
-                conn.query(
-                    'INSERT INTO DEPARTMENTS (DEPARTMENT_NAME) VALUES (?);',
-                    newDepartment,
-                    (err, results, fields) => {
-                        console.log(err);
+    console.log(ans);
+    // 
+    let newDepartment = ans.addDepartment.replace(/\s/g, '');
+    if (newDepartment) {
+        conn.query(
+            'INSERT INTO DEPARTMENTS (DEPARTMENT_NAME) VALUES (?);',
+            newDepartment,
+            (err, results, fields) => {
+                // error handling
+                if (err) throw err;
+                // if (err) {
+                //     switch (err.code) {
+                //         case 'ER_DUP_ENTRY':
+                //             returnStr = `${newDepartment} already exists. No update to departments.`;
+                //             departmentMenu(() => { console.log(returnStr); });
+                //             break;
+                //         default:
+                //             throw err;
+                //     }
+                // }
 
-                        // error handling
-                        if (err) {
-                            switch (err.code) {
-                                case 'ER_DUP_ENTRY':
-                                    returnStr = `${newDepartment} already exists. No update to departments.`;
-                                    departmentMenu(() => { console.log(returnStr); });
-                                    break;
-                                default:
-                                    throw err;
-                            }
-                        }
-
-                        // results are OK
-                        if (results.affectedRows === 1) {
-                            returnStr = `Added ${newDepartment}.\n`;
-                            departmentMenu(() => { console.log(returnStr); });
-                        }
-                    });
-            } else {
-                departmentMenu(() => 'No update to departments.');
-            }
-        });
+                // results are OK
+                if (results.affectedRows === 1) {
+                    returnStr = `Added ${newDepartment}.\n`;
+                    departmentMenu(() => { console.log(returnStr); });
+                }
+            });
+    } else {
+        departmentMenu(() => 'No update to departments.');
+    }
 };
 
-
 const viewDepartments = () => {
-    console.clear()
+    // console.clear()
     conn.query(
         `SELECT DEPARTMENT_NAME, count(roles.department_id)
          FROM departments left join roles 
@@ -77,6 +73,23 @@ const viewDepartments = () => {
             departmentMenu(() => { console.table(results); console.log('\n'); });
         })
 };
+
+// const viewDepartments = async () => {
+//     try {
+//         const { results } = await db.query({
+//             sql: `SELECT DEPARTMENT_NAME, count(roles.department_id)
+//            FROM departments left join roles 
+//         ON departments.id = roles.department_id
+//         GROUP BY DEPARTMENT_NAME;`
+//         });
+
+//         console.table(results)
+
+//     } catch (err) {
+//         throw err;
+//     }
+// }
+
 
 // meaningless action for departments 
 // const modifyDepartments = () => {}
@@ -107,18 +120,19 @@ const removeDepartments = () => {
                         removeDepartment,
                         (err, results, fields) => {
 
-                            console.log(err);
                             // error handling
-                            if (err) {
-                                switch (err.code) {
-                                    case 'ER_ROW_IS_REFERENCED_2':
-                                        returnStr = `${removeDepartment} can not be deleted because it is referenced by some roles.`;
-                                        departmentMenu(() => { console.log(returnStr); });
-                                        break;
-                                    default:
-                                        throw err;
-                                }
-                            }
+                            if (err) throw err;
+
+                            // if (err) {
+                            //     switch (err.code) {
+                            //         case 'ER_ROW_IS_REFERENCED_2':
+                            //             returnStr = `${removeDepartment} can not be deleted because it is referenced by some roles.`;
+                            //             departmentMenu(() => { console.log(returnStr); });
+                            //             break;
+                            //         default:
+                            //             throw err;
+                            //     }
+                            // }
 
                             // results ok
                             console.log(results.affectedRows === 1)
@@ -160,11 +174,11 @@ const addRole = () => {
 const viewRoles = () => {
     console.clear()
     conn.query(
-        `SELECT roles.title, departments.DEPARTMENT_NAME, count(employees.id)
-        FROM departments inner join roles left join employees
-        on  roles.DEPARTMENT_ID = departments.ID
-            and employees.ROLES_ID = roles.ID
-       group by roles.title;`,
+        `select  departments.department_name, roles.title, 
+        (SELECT COUNT(*) FROM employees WHERE roles.ID = employees.ROLES_ID ) as EmployeeCount
+   from roles
+   inner join departments  
+   on departments.id = roles.department_id;`,
         (err, results, fields) => {
             if (err) { Panic(err) };
             departmentMenu(() => { console.table(results); console.log('\n'); });
@@ -359,7 +373,7 @@ const rolesMenu = (prevResults) => {
 }
 
 const departmentMenu = (prevResults = () => { }) => {
-    console.clear();
+
     prevResults();
     console.log('********************************************************')
     inq.prompt(
