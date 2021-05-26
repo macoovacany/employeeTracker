@@ -36,17 +36,18 @@ const addDepartment = async () => {
             // results are OK
             if (rows.affectedRows === 1) {
                 returnStr = `Added ${newDepartment}.\n`;
-                departmentMenu(() => { console.clear(); console.log(returnStr); });
+                console.clear(); console.log(returnStr);
+                departmentMenu();
             }
         } else {
-            departmentMenu(() => 'No update to departments.');
+            console.log('No update to departments.')
+            departmentMenu();
         }
     } catch (err) {
         switch (err.errno) {
             case 1062:
-                departmentMenu(() => {
-                    console.clear(); console.log('Department already exists.');
-                });
+                console.clear(); console.log('Department already exists.');
+                departmentMenu();
                 break;
             default:
                 console.log(err.errno);
@@ -65,9 +66,8 @@ const viewDepartments = async () => {
         GROUP BY DEPARTMENT_NAME;`
         );
 
-        departmentMenu(() => { console.clear(); console.table(rows); });
-
-
+        console.clear(); console.table(rows);
+        departmentMenu();
     } catch (err) {
         throw err;
     }
@@ -106,15 +106,15 @@ const removeDepartments = async () => {
 
         if (rows.affectedRows === 1) {
             returnStr = `Removed ${removeDepartment}.\n`;
-            departmentMenu(() => { console.clear(); console.log(returnStr); });
+            console.clear(); console.log(returnStr);
+            departmentMenu();
         }
     } catch (err) {
         switch (err.errno) {
             case 1451:
                 returnStr = `Cannot remove department '${removeDepartment}'. \n Remove associated roles first.`
-                departmentMenu(() => {
-                    console.clear(); console.log(returnStr);
-                });
+                console.clear(); console.log(returnStr);
+                departmentMenu();
                 break;
             default:
                 console.log(err.errno);
@@ -130,32 +130,67 @@ const removeDepartments = async () => {
 // **************************
 
 const addRole = async () => {
-    console.clear()
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'addRole',
-            message: 'You need to input a value for addRole'
+    console.clear();
+
+    let TODO;
+
+    try {
+        // query for input parameters
+        const ans = await inq.prompt([
+            {
+                type: 'input',
+                name: 'TODO',
+                message: 'TODO: Fix this menu item.'
+            }
+        ]);
+
+
+        TODO = ans.TODO;  // prepar eanswer for SQL
+        if (TODO) {
+
+            queryString = `SELECT 'TODO: Fix SQL query';`
+            const [rows, fields] = await conn.execute(
+                queryString,
+                [TODO]);
+            if (rows.affectedRows === 1) {
+                returnStr = `TODO:  ${TODO}.\n`;
+                console.clear(); console.log(returnStr);
+                TODOMenu();
+            }
+        } else {
+            TODOMenu(() => 'TODO: Failure description');
         }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            rolesMenu();
-        });
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
+
 const viewRoles = async () => {
-    console.clear()
-    conn.query(
-        `select  departments.department_name, roles.title, 
-        (SELECT COUNT(*) FROM employees WHERE roles.ID = employees.ROLES_ID ) as EmployeeCount
-   from roles
-   inner join departments  
-   on departments.id = roles.department_id;`,
-        (err, results, fields) => {
-            if (err) { Panic(err) };
-            departmentMenu(() => { console.table(results); console.log('\n'); });
-        })
+
+    try {
+        queryString = `select  roles.title, departments.department_name,  
+(SELECT COUNT(*) FROM employees WHERE roles.ID = employees.ROLES_ID ) as EmployeeCount, roles.salary
+from roles
+inner join departments  
+on departments.id = roles.department_id;`;
+
+        const [rows, fields] = await conn.execute(
+            queryString);
+        console.clear(); console.table(rows);
+        rolesMenu();
+
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 
@@ -263,7 +298,7 @@ const removeEmployee = async () => {
 // *************************
 
 
-const viewManagers = async () => {
+const viewOrgChart = async () => {
 
     console.log('viewManagers');
     inq.prompt([
@@ -281,7 +316,7 @@ const viewManagers = async () => {
 };
 
 
-const ShowSummaries = async () => {
+const viewBudget = async () => {
 
     console.log('ShowSummaries');
     inq.prompt([
@@ -321,9 +356,9 @@ const Quit = () => {
 //  * Menu options  ********
 // *************************
 
-const rolesMenu = (prevResults) => {
-    console.clear();
-    console.log(prevResults);
+const rolesMenu = () => {
+
+    console.log('********************************************************')
 
     inq.prompt(
         [{
@@ -345,9 +380,7 @@ const rolesMenu = (prevResults) => {
         });
 }
 
-const departmentMenu = (prevResults = () => { }) => {
-
-    prevResults();
+const departmentMenu = () => {
     console.log('********************************************************')
     inq.prompt(
         [{
@@ -404,8 +437,8 @@ const reportsMenu = (prevResults) => {
             name: 'menuChoice',
             message: 'What would you like to do?',
             choices: [
-                { name: 'View Org Chart', value: viewManagers },
-                { name: 'Show summaries', value: ShowSummaries },
+                { name: 'View Org Chart', value: viewOrgChart },
+                { name: 'Show summaries', value: viewBudget },
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
         },
