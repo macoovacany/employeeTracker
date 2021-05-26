@@ -195,34 +195,84 @@ on departments.id = roles.department_id;`;
 
 
 const modifyRoles = async () => {
-    console.log('modifyRoles');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'modifyRoles',
-            message: 'You need to input a value for modifyRoles'
+    console.clear();
+
+    let TODO;
+
+    try {
+        // query for input parameters
+        const ans = await inq.prompt([
+            {
+                type: 'input',
+                name: 'TODO',
+                message: 'TODO: Fix this menu item.'
+            }
+        ]);
+
+
+        TODO = ans.TODO;  // prepar eanswer for SQL
+        if (TODO) {
+
+            queryString = `SELECT 'TODO: Fix SQL query';`
+            const [rows, fields] = await conn.execute(
+                queryString,
+                [TODO]);
+            if (rows.affectedRows === 1) {
+                returnStr = `TODO:  ${TODO}.\n`;
+                console.clear(); console.log(returnStr);
+                TODOMenu();
+            }
+        } else {
+            TODOMenu(() => 'TODO: Failure description');
         }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            rolesMenu();
-        });
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 
 const removeRoles = async () => {
-    console.log('removeRoles');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'removeRoles',
-            message: 'You need to input a value for removeRoles'
+    console.clear();
+
+    let TODO;
+
+    try {
+        // query for input parameters
+        const ans = await inq.prompt([
+            {
+                type: 'input',
+                name: 'TODO',
+                message: 'TODO: Fix this menu item.'
+            }
+        ]);
+
+
+        TODO = ans.TODO;  // prepar eanswer for SQL
+        if (TODO) {
+
+            queryString = `SELECT 'TODO: Fix SQL query';`
+            const [rows, fields] = await conn.execute(
+                queryString,
+                [TODO]);
+            if (rows.affectedRows === 1) {
+                returnStr = `TODO:  ${TODO}.\n`;
+                console.clear(); console.log(returnStr);
+                TODOMenu();
+            }
+        } else {
+            TODOMenu(() => 'TODO: Failure description');
         }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            rolesMenu();
-        });
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 
@@ -232,60 +282,160 @@ const removeRoles = async () => {
 // **************************
 
 const addEmployee = async () => {
-    console.log('AddEmployee');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'AddEmployee',
-            message: 'You need to input a value for AddEmployee'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            employeesMenu();
-        });
+    console.clear();
 
+    let TODO;
+
+    try {
+        // query for input parameters
+        const ans = await inq.prompt([
+            {
+                type: 'input',
+                name: 'TODO',
+                message: 'TODO: Fix this menu item.'
+            }
+        ]);
+
+
+        TODO = ans.TODO;  // prepar eanswer for SQL
+        if (TODO) {
+
+            queryString = `SELECT 'TODO: Fix SQL query';`
+            const [rows, fields] = await conn.execute(
+                queryString,
+                [TODO]);
+            if (rows.affectedRows === 1) {
+                returnStr = `TODO:  ${TODO}.\n`;
+                console.clear(); console.log(returnStr);
+                TODOMenu();
+            }
+        } else {
+            TODOMenu(() => 'TODO: Failure description');
+        }
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 const viewEmployees = async () => {
-    console.log('viewEmployees/n/n');
-    conn.query(
-        'SELECT * FROM EMPLOYEES;',
-        (err, results, fields) => {
-            if (err) throw err;
-            console.table(results);
-            employeesMenu();
-        });
+
+    try {
+        queryString = `select  
+        concat(emp.first_name, ' ', emp.last_name) as employee_name, 
+        roles.title , 
+      concat(Man.first_name, ' ', Man.last_name) as manager_name
+     
+      from employees as Emp
+      
+      inner join roles
+     on Emp.roles_id = roles.id
+      
+     left join employees as Man
+     on Emp.manager_id = Man.id
+     
+     order by emp.last_name;
+      
+     `;
+
+        const [rows, fields] = await conn.execute(
+            queryString);
+
+        console.clear();
+        console.log('Default sort order by last name');
+        console.table(rows);
+        employeesMenu();
+
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 const modifyEmployee = async () => {
-    console.log('modifyEmployee');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'modifyEmployee',
-            message: 'You need to input a value for modifyEmployee'
+    console.clear();
+
+    let TODO;
+
+    try {
+        // query for input parameters
+        const ans = await inq.prompt([
+            {
+                type: 'input',
+                name: 'TODO',
+                message: 'TODO: Fix this menu item.'
+            }
+        ]);
+
+
+        TODO = ans.TODO;  // prepar eanswer for SQL
+        if (TODO) {
+
+            queryString = `SELECT 'TODO: Fix SQL query';`
+            const [rows, fields] = await conn.execute(
+                queryString,
+                [TODO]);
+            if (rows.affectedRows === 1) {
+                returnStr = `TODO:  ${TODO}.\n`;
+                console.clear(); console.log(returnStr);
+                TODOMenu();
+            }
+        } else {
+            TODOMenu(() => 'TODO: Failure description');
         }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            employeesMenu();
-        });
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 const removeEmployee = async () => {
-    console.log('removeEmployee');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'removeEmployee',
-            message: 'You need to input a value for removeEmployee'
+    console.clear();
+
+    let TODO;
+
+    try {
+        // query for input parameters
+        const ans = await inq.prompt([
+            {
+                type: 'input',
+                name: 'TODO',
+                message: 'TODO: Fix this menu item.'
+            }
+        ]);
+
+
+        TODO = ans.TODO;  // prepar eanswer for SQL
+        if (TODO) {
+
+            queryString = `SELECT 'TODO: Fix SQL query';`
+            const [rows, fields] = await conn.execute(
+                queryString,
+                [TODO]);
+            if (rows.affectedRows === 1) {
+                returnStr = `TODO:  ${TODO}.\n`;
+                console.clear(); console.log(returnStr);
+                TODOMenu();
+            }
+        } else {
+            TODOMenu(() => 'TODO: Failure description');
         }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            employeesMenu();
-        });
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 
@@ -300,37 +450,73 @@ const removeEmployee = async () => {
 
 const viewOrgChart = async () => {
 
-    console.log('viewManagers');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'viewManagers',
-            message: 'You need to input a value for viewManagers'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            mainMenu();
-        });
+    try {
+        queryString = `select 
+        dep.department_name, 
+        sum(roles.salary) as department_budget
+      
+      from roles
+        inner join employees as emp
+        on emp.roles_id = roles.id
+        
+        inner join departments as dep
+        on roles.department_id = dep.id
+      
+      group by dep.department_name;
+      `;
 
+        const [rows, fields] = await conn.execute(
+            queryString);
+
+        console.clear();
+        console.log('Default sort order by last name');
+        console.table(rows);
+        employeesMenu();
+
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
+
+
 
 
 const viewBudget = async () => {
 
-    console.log('ShowSummaries');
-    inq.prompt([
-        {
-            type: 'input',
-            name: 'ShowSummaries',
-            message: 'You need to input a value for ShowSummaries'
-        }
-    ])
-        .then((ans) => {
-            console.log(ans)
-            mainMenu();
-        });
+    try {
+        queryString = `select 
+        dep.department_name, 
+        sum(roles.salary) as department_budget
+      
+      from roles
+        inner join employees as emp
+        on emp.roles_id = roles.id
+        
+        inner join departments as dep
+        on roles.department_id = dep.id
+      
+      group by dep.department_name;
+      `;
 
+        const [rows, fields] = await conn.execute(
+            queryString);
+
+        console.clear();
+        console.log('Default sort order by last name');
+        console.table(rows);
+        employeesMenu();
+
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 
@@ -402,9 +588,7 @@ const departmentMenu = () => {
 }
 
 
-const employeesMenu = (prevResults) => {
-    console.clear();
-    console.log(prevResults);
+const employeesMenu = () => {
 
     inq.prompt(
         [{
@@ -427,9 +611,7 @@ const employeesMenu = (prevResults) => {
 }
 
 
-const reportsMenu = (prevResults) => {
-    console.clear();
-    console.log(prevResults);
+const reportsMenu = () => {
 
     inq.prompt(
         [{
@@ -438,7 +620,7 @@ const reportsMenu = (prevResults) => {
             message: 'What would you like to do?',
             choices: [
                 { name: 'View Org Chart', value: viewOrgChart },
-                { name: 'Show summaries', value: viewBudget },
+                { name: 'Show department budgets', value: viewBudget },
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
         },
@@ -492,7 +674,7 @@ const mainMenu = (prevResults) => {
                     { name: 'Roles queries', value: rolesMenu },
                     { name: 'Employees queries', value: employeesMenu },
                     { name: 'Reports queries', value: reportsMenu },
-                    { name: 'Debug Query', value: debugQuery },
+                    // { name: 'Debug Query', value: debugQuery },
                     { name: 'Quit', value: Quit },
                 ]
             },
