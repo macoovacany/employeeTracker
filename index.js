@@ -1,16 +1,11 @@
 const inq = require('inquirer');
 const process = require('process');
-const mysql = require('mysql2');
 
-
+// https://github.com/sidorares/node-mysql2#using-promise-wrapper
+const mysql = require('mysql2/promise');
 // conn is going to be kept open throughout the interface with the menus
-const conn =  mysql.createConnection({
-    host: 'localhost',
-    port: 3306,
-    user: 'root',
-    password: '',
-    database: 'EMPLOYEE_TRACKER_DB',
-});
+var conn;   // global connection 
+
 
 
 // create, read, update and delete queries are called
@@ -22,132 +17,110 @@ const conn =  mysql.createConnection({
 
 const addDepartment = async () => {
     console.clear()
-    const ans = await inq.prompt([
-        {
-            type: 'input',
-            name: 'addDepartment',
-            message: 'Add a new department, or enter to bail.'
-        }
-    ])
-    console.log(ans);
-    // 
-    let newDepartment = ans.addDepartment.replace(/\s/g, '');
-    if (newDepartment) {
-        conn.query(
-            'INSERT INTO DEPARTMENTS (DEPARTMENT_NAME) VALUES (?);',
-            newDepartment,
-            (err, results, fields) => {
-                // error handling
-                if (err) throw err;
-                // if (err) {
-                //     switch (err.code) {
-                //         case 'ER_DUP_ENTRY':
-                //             returnStr = `${newDepartment} already exists. No update to departments.`;
-                //             departmentMenu(() => { console.log(returnStr); });
-                //             break;
-                //         default:
-                //             throw err;
-                //     }
-                // }
+    try {
+        const ans = await inq.prompt([
+            {
+                type: 'input',
+                name: 'addDepartment',
+                message: 'Add a new department, or enter to bail.'
+            }
+        ]);
 
-                // results are OK
-                if (results.affectedRows === 1) {
-                    returnStr = `Added ${newDepartment}.\n`;
-                    departmentMenu(() => { console.log(returnStr); });
-                }
-            });
-    } else {
-        departmentMenu(() => 'No update to departments.');
+        // 
+        let newDepartment = ans.addDepartment.replace(/\s/g, '');
+        if (newDepartment) {
+            const [rows, fields] = await conn.execute(
+                'INSERT INTO DEPARTMENTS (DEPARTMENT_NAME) VALUES (?);',
+                [newDepartment]);
+
+            // results are OK
+            if (rows.affectedRows === 1) {
+                returnStr = `Added ${newDepartment}.\n`;
+                departmentMenu(() => { console.clear(); console.log(returnStr); });
+            }
+        } else {
+            departmentMenu(() => 'No update to departments.');
+        }
+    } catch (err) {
+        switch (err.errno) {
+            case 1062:
+                departmentMenu(() => {
+                    console.clear(); console.log('Department already exists.');
+                });
+                break;
+            default:
+                console.log(err.errno);
+                Quit();
+        }
     }
 };
 
-const viewDepartments = () => {
-    // console.clear()
-    conn.query(
-        `SELECT DEPARTMENT_NAME, count(roles.department_id)
-         FROM departments left join roles 
-         ON departments.id = roles.department_id
-        GROUP BY DEPARTMENT_NAME;`,
-        (err, results, fields) => {
-            if (err) { Panic(err) };
-            departmentMenu(() => { console.table(results); console.log('\n'); });
-        })
-};
 
-// const viewDepartments = async () => {
-//     try {
-//         const { results } = await db.query({
-//             sql: `SELECT DEPARTMENT_NAME, count(roles.department_id)
-//            FROM departments left join roles 
-//         ON departments.id = roles.department_id
-//         GROUP BY DEPARTMENT_NAME;`
-//         });
+const viewDepartments = async () => {
+    try {
+        const [rows, fields] = await conn.execute(
+            `SELECT DEPARTMENT_NAME, count(roles.department_id)
+           FROM departments left join roles 
+        ON departments.id = roles.department_id
+        GROUP BY DEPARTMENT_NAME;`
+        );
 
-//         console.table(results)
+        departmentMenu(() => { console.clear(); console.table(rows); });
 
-//     } catch (err) {
-//         throw err;
-//     }
-// }
+
+    } catch (err) {
+        throw err;
+    }
+}
 
 
 // meaningless action for departments 
 // const modifyDepartments = () => {}
 
 
-const removeDepartments = () => {
+const removeDepartments = async () => {
     console.clear()
-    conn.query(
-        'SELECT * FROM DEPARTMENTS;',
-        (err, results, fields) => {
-            if (err) throw err;
-            departmentList = results.map(element => {
-                return element.DEPARTMENT_NAME;
-            });
+    let removeDepartment = ''; // referenced in catch block
 
-            inq.prompt([
-                {
-                    type: 'list',
-                    name: 'removeDepartmentSelection',
-                    message: 'Which department do you want to remove?',
-                    choices: departmentList
-                }])
-                .then((ans) => {
-                    let removeDepartment = ans.removeDepartmentSelection;
+    try {
+        const [results, fields_1] = await conn.execute(
+            'SELECT * FROM DEPARTMENTS;');
 
-                    conn.query(
-                        'DELETE FROM DEPARTMENTS WHERE DEPARTMENT_NAME = ?;',
-                        removeDepartment,
-                        (err, results, fields) => {
+        departmentList = results.map(element => {
+            return element.DEPARTMENT_NAME;
+        });
 
-                            // error handling
-                            if (err) throw err;
+        const ans = await inq.prompt([
+            {
+                type: 'list',
+                name: 'removeDepartmentSelection',
+                message: 'Which department do you want to remove?',
+                choices: departmentList
+            }]);
 
-                            // if (err) {
-                            //     switch (err.code) {
-                            //         case 'ER_ROW_IS_REFERENCED_2':
-                            //             returnStr = `${removeDepartment} can not be deleted because it is referenced by some roles.`;
-                            //             departmentMenu(() => { console.log(returnStr); });
-                            //             break;
-                            //         default:
-                            //             throw err;
-                            //     }
-                            // }
+        removeDepartment = ans.removeDepartmentSelection;
 
-                            // results ok
-                            console.log(results.affectedRows === 1)
-                            if (results.affectedRows === 1) {
-                                returnStr = `${ans.removeDepartmentSelection} removed`;
-                                departmentMenu(() => 'returnStr');
-                            } else {
-                                // something went wrong...
-                                // console.clear()
-                                Quit();
-                            }
-                        }
-                    )
+        const [rows, fields_2] = await conn.execute(
+            'DELETE FROM DEPARTMENTS WHERE DEPARTMENT_NAME = ?;',
+            [removeDepartment]);
+
+        if (rows.affectedRows === 1) {
+            returnStr = `Removed ${removeDepartment}.\n`;
+            departmentMenu(() => { console.clear(); console.log(returnStr); });
+        }
+    } catch (err) {
+        switch (err.errno) {
+            case 1451:
+                returnStr = `Cannot remove department '${removeDepartment}'. \n Remove associated roles first.`
+                departmentMenu(() => {
+                    console.clear(); console.log(returnStr);
                 });
-        })
+                break;
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
 };
 
 
@@ -156,7 +129,7 @@ const removeDepartments = () => {
 // Role queries
 // **************************
 
-const addRole = () => {
+const addRole = async () => {
     console.clear()
     inq.prompt([
         {
@@ -171,7 +144,7 @@ const addRole = () => {
         });
 };
 
-const viewRoles = () => {
+const viewRoles = async () => {
     console.clear()
     conn.query(
         `select  departments.department_name, roles.title, 
@@ -186,7 +159,7 @@ const viewRoles = () => {
 };
 
 
-const modifyRoles = () => {
+const modifyRoles = async () => {
     console.log('modifyRoles');
     inq.prompt([
         {
@@ -202,7 +175,7 @@ const modifyRoles = () => {
 };
 
 
-const removeRoles = () => {
+const removeRoles = async () => {
     console.log('removeRoles');
     inq.prompt([
         {
@@ -223,7 +196,7 @@ const removeRoles = () => {
 // Role queries
 // **************************
 
-const addEmployee = () => {
+const addEmployee = async () => {
     console.log('AddEmployee');
     inq.prompt([
         {
@@ -239,7 +212,7 @@ const addEmployee = () => {
 
 };
 
-const viewEmployees = () => {
+const viewEmployees = async () => {
     console.log('viewEmployees/n/n');
     conn.query(
         'SELECT * FROM EMPLOYEES;',
@@ -250,7 +223,7 @@ const viewEmployees = () => {
         });
 };
 
-const modifyEmployee = () => {
+const modifyEmployee = async () => {
     console.log('modifyEmployee');
     inq.prompt([
         {
@@ -265,7 +238,7 @@ const modifyEmployee = () => {
         });
 };
 
-const removeEmployee = () => {
+const removeEmployee = async () => {
     console.log('removeEmployee');
     inq.prompt([
         {
@@ -290,7 +263,7 @@ const removeEmployee = () => {
 // *************************
 
 
-const viewManagers = () => {
+const viewManagers = async () => {
 
     console.log('viewManagers');
     inq.prompt([
@@ -308,7 +281,7 @@ const viewManagers = () => {
 };
 
 
-const ShowSummaries = () => {
+const ShowSummaries = async () => {
 
     console.log('ShowSummaries');
     inq.prompt([
@@ -431,7 +404,7 @@ const reportsMenu = (prevResults) => {
             name: 'menuChoice',
             message: 'What would you like to do?',
             choices: [
-                { name: 'view managers', value: viewManagers },
+                { name: 'View Org Chart', value: viewManagers },
                 { name: 'Show summaries', value: ShowSummaries },
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
@@ -498,27 +471,36 @@ const mainMenu = (prevResults) => {
 }
 
 
-// main entry point - straight into the 
-// database checks
-// then call the inquirer UI proper
-conn.query(
-    'SELECT COUNT(*) as numEmployees FROM EMPLOYEES; ',
-    (err, results, fields) => {
-        if (err) throw err;
-        let numEmployees = results[0].numEmployees;
 
-        // enter inqurier mode proper
+const main = async () => {
+
+    try {
+        conn = await mysql.createConnection(
+            {
+                host: 'localhost',
+                user: 'root',
+                port: 3306,
+                password: '',
+                database: 'EMPLOYEE_TRACKER_DB',
+            });
+
+
+        const [rows, fields] = await conn.execute(
+            'SELECT COUNT(*) as numEmployees FROM EMPLOYEES;')
+
+        const numEmployees = rows[0].numEmployees;
+
         mainMenu(`
         **********************************
         Employee and Department Maagement
         *********************************
 
-        Connected to database with ${numEmployees} employeess.
+        Connected to database with ${numEmployees} employees.
         `);
-    })
 
-    // conn.end();
+    } catch (err) {
+        console.log(err)
+    }
+}
 
-    // .then(() => {
-    // });
-
+main()
