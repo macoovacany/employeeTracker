@@ -276,38 +276,81 @@ const removeRoles = async () => {
 const addEmployee = async () => {
     console.clear();
 
-    let TODO;
-
     try {
+
+        // roles
+        const [roles_results, fields_1] = await conn.execute(
+            'SELECT * FROM ROLES;');
+        const rolesList = roles_results.map(element => {
+            return element.TITLE;
+        });
+
+        // for managers
+        // assumme anyoen can be a manager
+        const [managers, fields_2] = await conn.execute(
+            'SELECT * FROM EMPLOYEES;');
+        managerList = managers.map(element => {
+            return { name: `${element.FIRST_NAME} ${element.LAST_NAME}`, value: element.ID };
+        });
+
+
         // query for input parameters
         const ans = await inq.prompt([
             {
                 type: 'input',
-                name: 'TODO',
-                message: 'TODO: Fix this menu item.'
-            }
+                name: 'addEmployeeFirstname',
+                message: 'Employees First Name?'
+            },
+            {
+                type: 'input',
+                name: 'addEmployeeLastname',
+                message: 'Last Name?'
+            },
+            {
+                type: 'list',
+                name: 'addEmployeeRole',
+                message: 'What is the employees role?',
+                choices: rolesList
+            },
+            {
+                type: 'list',
+                name: 'addEmployeeManager',
+                message: 'Who is the employees manager?',
+                choices: [...managerList, { name: 'No manager', value: null }]
+            },
         ]);
 
+        // TODO validation checks
+        // TODO, make sure values in row are unique
+        // TODO: check if the employee is in the same department as the manager 
+        // if (managerID >0){
+        // make sure the manager and employee are in the same department
+        // }
 
-        TODO = ans.TODO;  // prepar eanswer for SQL
-        if (TODO) {
+        const [rows, fields_3] = await conn.execute(
+            `INSERT INTO EMPLOYEES (FIRST_NAME, LAST_NAME, ROLES_ID, MANAGER_ID) VALUES
+            ('${ans.addEmployeeFirstname}', 
+            '${ans.addEmployeelastname}', 
+            ${ans.addEmployeeRole}, 
+            ${ans.addEmployeeManager});`);
 
-            queryString = `SELECT 'TODO: Fix SQL query';`
-            const [rows, fields] = await conn.execute(
-                queryString,
-                [TODO]);
-            if (rows.affectedRows === 1) {
-                returnStr = `TODO:  ${TODO}.\n`;
-                console.clear(); console.log(returnStr);
-                TODOMenu();
-            }
+        if (rows.affectedRows === 1) {
+            returnStr = `Added employee ${ans.addEmployeeFirstname} ${ans.addEmployeelastname}`;
+            console.clear();
+            console.log(returnStr);
+            rolesMenu();
         } else {
-            TODOMenu(() => 'TODO: Failure description');
+            console.log(rows, fields);
+            rolesMenu();
         }
+
     } catch (err) {
         switch (err.errno) {
+            case 1064:
+                console.log('Syntax Error in the SQL query. ');
+                Quit();
             default:
-                console.log(err.errno);
+                console.log(err);
                 Quit();
         }
     }
