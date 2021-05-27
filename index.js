@@ -1,6 +1,8 @@
 const inq = require('inquirer');
 const process = require('process');
 
+require('dotenv').config();
+
 // https://github.com/sidorares/node-mysql2#using-promise-wrapper
 const mysql = require('mysql2/promise');
 // conn is going to be kept open throughout the interface with the menus
@@ -167,23 +169,11 @@ const addRole = async () => {
 
 
         // TODO, make sure values in row are unique
-
-        // console.log(ans.addRoleTitle);
-        // console.log(ans.addRoleSalary);
-        console.log(ans.addRoleDepartment);
-
-
         const [rows, fields] = await conn.execute(
-            // `INSERT INTO ROLES (TITLE, SALARY, DEPARTMENT_ID) VALUES
-            // ('?', ? +0, (select id from departments where department_name='?')+0);`,
-            // [ans.addRoleTitle, ans.addRoleSalary, ans.addRoleDepartment]);
-            `select id from departments where department_name='?';`,
-            [ans.addRoleDepartment]);
-
-        console.log(rows);
-        Quit();
-
-
+            `INSERT INTO ROLES (TITLE, SALARY, DEPARTMENT_ID) VALUES
+            ('${ans.addRoleTitle}',
+             ${ans.addRoleSalary},
+              (select id from departments where department_name='${ans.addRoleDepartment}'));`);
 
         if (rows.affectedRows === 1) {
             returnStr = `Add role ${ans.addRoleTitle} to the ${ans.addRoleDepartment}.\n`;
@@ -231,86 +221,50 @@ on departments.id = roles.department_id;`;
     }
 };
 
-
-const modifyRoles = async () => {
-    console.clear();
-
-    let TODO;
-
-    try {
-        // query for input parameters
-        const ans = await inq.prompt([
-            {
-                type: 'choice',
-                name: 'modifyRole',
-                message: 'WHich'
-            }
-        ]);
-
-
-        TODO = ans.TODO;  // prepar eanswer for SQL
-        if (TODO) {
-
-            queryString = `SELECT 'TODO: Fix SQL query';`
-            const [rows, fields] = await conn.execute(
-                queryString,
-                [TODO]);
-            if (rows.affectedRows === 1) {
-                returnStr = `TODO:  ${TODO}.\n`;
-                console.clear(); console.log(returnStr);
-                TODOMenu();
-            }
-        } else {
-            TODOMenu(() => 'TODO: Failure description');
-        }
-    } catch (err) {
-        switch (err.errno) {
-            default:
-                console.log(err.errno);
-                Quit();
-        }
-    }
-};
-
-
 const removeRoles = async () => {
-    console.clear();
-
-    let TODO;
+    console.clear()
+    let removeRole = ''; // referenced in catch block
 
     try {
-        // query for input parameters
+        const [results, fields_1] = await conn.execute(
+            'SELECT * FROM ROLES;');
+
+        roleList = results.map(element => {
+            return element.TITLE;
+        });
+
         const ans = await inq.prompt([
             {
-                type: 'input',
-                name: 'TODO',
-                message: 'TODO: Fix this menu item.'
-            }
-        ]);
+                type: 'list',
+                name: 'removeRoleSelection',
+                message: 'Which department do you want to remove?',
+                choices: roleList
+            }]);
 
+        removeRole = ans.removeRoleSelection;
 
-        TODO = ans.TODO;  // prepar eanswer for SQL
-        if (TODO) {
+        const [rows, fields_2] = await conn.execute(
+            'DELETE FROM ROLES WHERE TITLE = ?;',
+            [removeRole]);
 
-            queryString = `SELECT 'TODO: Fix SQL query';`
-            const [rows, fields] = await conn.execute(
-                queryString,
-                [TODO]);
-            if (rows.affectedRows === 1) {
-                returnStr = `TODO:  ${TODO}.\n`;
-                console.clear(); console.log(returnStr);
-                TODOMenu();
-            }
-        } else {
-            TODOMenu(() => 'TODO: Failure description');
+        if (rows.affectedRows === 1) {
+            returnStr = `Removed ${removeRole}.\n`;
+            console.clear(); console.log(returnStr);
+            rolesMenu();
         }
     } catch (err) {
         switch (err.errno) {
+            case 1451:
+                returnStr = `Cannot remove role '${removeRole}'. \n Remove associated employees first.`
+                console.clear(); console.log(returnStr);
+                rolesMenu();
+                break;
             default:
                 console.log(err.errno);
                 Quit();
         }
     }
+
 };
 
 
@@ -437,48 +391,56 @@ const modifyEmployee = async () => {
 };
 
 const removeEmployee = async () => {
-    console.clear();
-
-    let TODO;
+    console.clear()
+    let removeEmployee = ''; // referenced in catch block
+    let employeeName = '';
 
     try {
-        // query for input parameters
+        const [results, fields_1] = await conn.execute(
+            'SELECT * FROM EMPLOYEES;');
+
+        employeeList = results.map(element => {
+            return { name: `${element.FIRST_NAME} ${element.LAST_NAME}`, value: element.ID };
+        });
+
         const ans = await inq.prompt([
             {
-                type: 'input',
-                name: 'TODO',
-                message: 'TODO: Fix this menu item.'
+                type: 'list',
+                name: 'removeEmployeeSelection',
+                message: 'Which employee do you want to remove?',
+                choices: employeeList
+            }]);
+
+        removeEmployee = ans.removeEmployeeSelection;
+        employeeName = employeeList.filter((e) => {
+            if (e.value === removeEmployee) {
+                return e.name;
             }
-        ]);
+        })[0].name;
 
+        const [rows, fields_2] = await conn.execute(
+            'DELETE FROM EMPLOYEES WHERE ID = ?;',
+            [removeEmployee]);
 
-        TODO = ans.TODO;  // prepar eanswer for SQL
-        if (TODO) {
-
-            queryString = `SELECT 'TODO: Fix SQL query';`
-            const [rows, fields] = await conn.execute(
-                queryString,
-                [TODO]);
-            if (rows.affectedRows === 1) {
-                returnStr = `TODO:  ${TODO}.\n`;
-                console.clear(); console.log(returnStr);
-                TODOMenu();
-            }
-        } else {
-            TODOMenu(() => 'TODO: Failure description');
+        if (rows.affectedRows === 1) {
+            returnStr = `Removed ${employeeName}.\n`;
+            console.clear(); console.log(returnStr);
+            employeesMenu();
         }
     } catch (err) {
         switch (err.errno) {
+            case 1451:
+                returnStr = `Cannot remove employee '${employeeName}'.`
+                console.clear(); console.log(returnStr);
+                employeesMenu();
+                break;
             default:
                 console.log(err.errno);
                 Quit();
         }
     }
+
 };
-
-
-
-
 
 
 // *************************
@@ -520,9 +482,6 @@ const viewOrgChart = async () => {
     }
 };
 
-
-
-
 const viewBudget = async () => {
 
     try {
@@ -557,9 +516,6 @@ const viewBudget = async () => {
     }
 };
 
-
-
-
 const Panic = (err) => {
     console.log('Panic exit - ')
     throw err;
@@ -574,7 +530,6 @@ const Quit = () => {
     conn.end();
     process.exit();
 }
-
 
 // *************************
 //  * Menu options  ********
@@ -592,7 +547,6 @@ const rolesMenu = () => {
             choices: [
                 { name: 'add role', value: addRole },
                 { name: 'view roles', value: viewRoles },
-                { name: 'modify a role', value: modifyRoles },
                 { name: 'remove Roles', value: removeRoles },
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
@@ -625,7 +579,6 @@ const departmentMenu = () => {
         });
 }
 
-
 const employeesMenu = () => {
 
     inq.prompt(
@@ -647,7 +600,6 @@ const employeesMenu = () => {
             ans.menuChoice();
         });
 }
-
 
 const reportsMenu = () => {
 
@@ -696,7 +648,6 @@ const debugQuery = () => {
         })
 };
 
-
 const mainMenu = (prevResults) => {
     console.clear();
     console.log(prevResults);
@@ -723,18 +674,16 @@ const mainMenu = (prevResults) => {
         });
 }
 
-
-
 const main = async () => {
 
     try {
         conn = await mysql.createConnection(
             {
                 host: 'localhost',
-                user: 'root',
                 port: 3306,
-                password: '',
-                database: 'EMPLOYEE_TRACKER_DB',
+                database: process.env.DB_NAME,
+                user: process.env.DB_USER,
+                password: process.env.DB_PASSWORD,
             });
 
 
