@@ -132,38 +132,76 @@ const removeDepartments = async () => {
 const addRole = async () => {
     console.clear();
 
-    let TODO;
+    let addRoleDepartment = ''; // referenced in catch block
 
     try {
+        const [dep_results, fields_1] = await conn.execute(
+            'SELECT DEPARTMENT_NAME FROM DEPARTMENTS;');
+
+        const departmentList = dep_results.map(element => {
+            return element.DEPARTMENT_NAME;
+        });
+
         // query for input parameters
         const ans = await inq.prompt([
             {
                 type: 'input',
-                name: 'TODO',
-                message: 'TODO: Fix this menu item.'
+                name: 'addRoleTitle',
+                message: 'Add name of new role'
+            },
+            {
+                type: 'list',
+                name: 'addRoleDepartment',
+                message: 'Which department is the new role for?',
+                choices: departmentList
+            },
+            {
+                type: 'number',
+                name: 'addRoleSalary',
+                message: 'What is the salary of the new role?',
+                // validate: (addRoleSalary) => {
+                //     return (addRoleSalary.trim().match(/^[0-9]+$/) != null);
+                // }
             }
         ]);
 
 
-        TODO = ans.TODO;  // prepar eanswer for SQL
-        if (TODO) {
+        // TODO, make sure values in row are unique
 
-            queryString = `SELECT 'TODO: Fix SQL query';`
-            const [rows, fields] = await conn.execute(
-                queryString,
-                [TODO]);
-            if (rows.affectedRows === 1) {
-                returnStr = `TODO:  ${TODO}.\n`;
-                console.clear(); console.log(returnStr);
-                TODOMenu();
-            }
+        // console.log(ans.addRoleTitle);
+        // console.log(ans.addRoleSalary);
+        console.log(ans.addRoleDepartment);
+
+
+        const [rows, fields] = await conn.execute(
+            // `INSERT INTO ROLES (TITLE, SALARY, DEPARTMENT_ID) VALUES
+            // ('?', ? +0, (select id from departments where department_name='?')+0);`,
+            // [ans.addRoleTitle, ans.addRoleSalary, ans.addRoleDepartment]);
+            `select id from departments where department_name='?';`,
+            [ans.addRoleDepartment]);
+
+        console.log(rows);
+        Quit();
+
+
+
+        if (rows.affectedRows === 1) {
+            returnStr = `Add role ${ans.addRoleTitle} to the ${ans.addRoleDepartment}.\n`;
+            console.clear();
+            console.log(returnStr);
+            rolesMenu();
         } else {
-            TODOMenu(() => 'TODO: Failure description');
+            console.log(rows, fields);
+            rolesMenu();
         }
+
     } catch (err) {
         switch (err.errno) {
+            case 1064:
+                console.log('Syntax Error in the SQL query. ');
+                Quit();
             default:
-                console.log(err.errno);
+                console.log(err);
                 Quit();
         }
     }
@@ -203,9 +241,9 @@ const modifyRoles = async () => {
         // query for input parameters
         const ans = await inq.prompt([
             {
-                type: 'input',
-                name: 'TODO',
-                message: 'TODO: Fix this menu item.'
+                type: 'choice',
+                name: 'modifyRole',
+                message: 'WHich'
             }
         ]);
 
