@@ -5,13 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "node index.js"
+    "start": "node index.js",
+    "seed": "node seed.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^10.0.0",
     "inquirer": "^8.0.0",
-    "mysql2": "^2.2.5"
+    "mysql2": "^2.2.5",
+    "shelljs": "^0.8.4"
   }
 }

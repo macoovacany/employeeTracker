@@ -1,8 +1,57 @@
-# Unit 12 MySQL Homework: Employee Tracker
+#  Employee Tracker
 
-Developers are often tasked with creating interfaces that make it easy for non-developers to view and interact with information stored in databases. Often these interfaces are known as **C**ontent **M**anagement **S**ystems. In this homework assignment, your challenge is to architect and build a solution for managing a company's employees using node, inquirer, and MySQL.
+ * []()
 
-## Instructions
+This homework assignment is to architect and build a solution for managing a company's employees using node, inquirer, and MySQL.
+
+## Requirements
+The business rules of the database are based on employees, having roles, belonging to departments and having managers.
+
+ The following rules are specified:
+
+ 1) Each __employee__:
+     1) must have a First Name 
+     1) must have a Last Name
+     1) may have a Manager
+     1) must have a __role__.
+ 1) A new employee can be added.
+ 1) An employee can have at most one manager.
+ 1) An employee does not necessarily have a manager (implies nullable).
+ 1) An employee can both be a manager and have a manager (nested management).
+ 1) Management structure cannot be circular (not implemented).
+ 1) You can not remove a employee if they are a manager for another employee.
+ 1) A manager must belong in the same department as the employee.
+ 1) An employee can change a managers.
+ 1) An employee can change roles.
+ 1) The role determines the salary of the employee.
+ 1) A role cannot be removed if there is an employee in that role.
+ 1) Each role belongs to exactly one __department__.
+ 1) A department can not be removed if there are employee associated with the department.
+
+ The following reporting requirements are specified:
+
+ 1) Show the employees under a specific manager.
+ 1) Show the employees in a specific department.
+ 1) Show the total budget for each department.
+
+## Interface
+### Main Menu
+The main menu directs the database user to the various sub menus.
+### Roles Menu
+
+
+
+### Departments Menu
+
+
+
+### Departments Menu
+
+
+
+
+
+
 
 Design the following database schema containing three tables:
 
