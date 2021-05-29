@@ -482,7 +482,8 @@ const modifyEmployeeManager = async () => {
 
 };
 
-const modifyEmployeeRoles = async () => {
+const modifyEmployeeRole = async () => {
+    
 };
 
 
@@ -686,9 +687,10 @@ const employeesMenu = () => {
             message: 'What would you like to do?',
             choices: [
                 { name: 'Add employee', value: addEmployee },
-                { name: 'view employees', value: viewEmployees },
+                { name: 'View employees', value: viewEmployees },
                 { name: 'Change employee\'s manager', value: modifyEmployeeManager },
-                { name: 'remove employees', value: removeEmployee },
+                { name: 'Change employee\'s role', value: modifyEmployeeRole },
+                { name: 'Remove employees', value: removeEmployee },
                 new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
