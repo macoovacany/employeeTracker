@@ -4,6 +4,8 @@
 
 This homework assignment is to architect and build a solution for managing a company's employees using node, inquirer, and MySQL.
 
+<span style="color:red"> __WARNING__ </span>: the code is NOT protected against SQL injection. Refer the video.
+
 ## Requirements
 The business rules of the database are based on employees, having roles, belonging to departments and having managers.
 
@@ -18,10 +20,10 @@ The business rules of the database are based on employees, having roles, belongi
  1) An employee can have at most one manager.
  1) An employee does not necessarily have a manager (implies nullable).
  1) An employee can both be a manager and have a manager (nested management).
- 1) Management structure cannot be circular (not implemented).
+ 1) <span style="color:red">Management structure cannot be circular (not implemented). </span>
  1) You can not remove a employee if they are a manager for another employee.
  1) A manager must belong in the same department as the employee.
- 1) An employee can change a managers.
+ 1) An employee can change managers.
  1) An employee can change roles.
  1) The role determines the salary of the employee.
  1) A role cannot be removed if there is an employee in that role.
@@ -36,17 +38,55 @@ The business rules of the database are based on employees, having roles, belongi
 
 ## Interface
 ### Main Menu
-The main menu directs the database user to the various sub menus.
+The main menu directs the database user to the various sub menus:
+ * [Employees...](#EmployeeMenu)
+ * [Roles...](#RolesMenu)
+ * [Departments...](#DepartmentsMenu)
+ * [Reports...](#ReportsMenu)
+
+or to quit the application.
+
+
+### Employee Menu
+<div id="EmployeeMenu"></div>
+
+The employee menu allows the user to add, view, delete or modify the the employee data. 
+
+When __adding a employee__,
+* _First name_: The first name must be specified, but can be any arbitrary string. <span style="color:red"> __WARNING__ </span>: the code is NOT protected against SQL injection. Apologies to O'Reillys out there.
+* _Last name_: The last name is not required and can be blank.
+* _Employee Role_: Selection from existing roles
+* _Manager_: Optional. Skipping this step will imply the employee does not have a manager.
+
+The __view employees__ will show a table of:
+ 
+ * employee name,
+ * their role, and
+ * their manager
+ 
+ By default, the employees are sorted by first name. This can not be controlled by the user.
+
+__Change employee's manager__ will change the 
+
+__Change employee's role__
+
+__Remove employees__
+
+
 ### Roles Menu
-
-
-
-### Departments Menu
-
+<div id="RolesMenu"></div>
 
 
 ### Departments Menu
+<div id="DepartmentMenu"></div>
 
+
+### Reports
+<div id="ReportsMenu"></div>
+
+ 1) Show the employees under a specific manager.
+ 1) Show the employees in a specific department.
+ 1) Show the total budget for each department.
 
 
 

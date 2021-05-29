@@ -1,13 +1,12 @@
-const inq = require('inquirer');
-const process = require('process');
-
-require('dotenv').config();
-
 // https://github.com/sidorares/node-mysql2#using-promise-wrapper
 const mysql = require('mysql2/promise');
+// const {escape} = require('mysql2');
 // conn is going to be kept open throughout the interface with the menus
 var conn;   // global connection 
 
+const inq = require('inquirer');
+const process = require('process');
+require('dotenv').config();
 
 
 // create, read, update and delete queries are called
@@ -298,7 +297,14 @@ const addEmployee = async () => {
             {
                 type: 'input',
                 name: 'addEmployeeFirstname',
-                message: 'Employees First Name?'
+                message: 'Employees First Name?',
+                validate: (input) => {
+                    if (input === '') {
+                        return 'A name must be entered.';
+                    } else {
+                        return true;
+                    }
+                }
             },
             {
                 type: 'input',
@@ -345,9 +351,10 @@ const addEmployee = async () => {
         }
 
     } catch (err) {
+        console.log(err)
         switch (err.errno) {
             case 1064:
-                console.log('Syntax Error in the SQL query. ');
+                console.log('Syntax Error in the SQL query. ');                
                 Quit();
             default:
                 console.log(err);
@@ -633,6 +640,7 @@ const rolesMenu = () => {
                 { name: 'add role', value: addRole },
                 { name: 'view roles', value: viewRoles },
                 { name: 'remove Roles', value: removeRoles },
+                new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
         },
@@ -655,6 +663,7 @@ const departmentMenu = () => {
                 { name: 'view departments', value: viewDepartments },
                 // { name: 'modify a department', value: modifyDepartments },
                 { name: 'remove a department', value: removeDepartments },
+                new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
         },
@@ -676,6 +685,7 @@ const employeesMenu = () => {
                 { name: 'view employees', value: viewEmployees },
                 { name: 'Change employee\'s manager', value: modifyEmployeeManager },
                 { name: 'remove employees', value: removeEmployee },
+                new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
         },
@@ -696,6 +706,7 @@ const reportsMenu = () => {
             choices: [
                 { name: 'View Org Chart', value: viewOrgChart },
                 { name: 'Show department budgets', value: viewBudget },
+                new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
         },
@@ -744,12 +755,13 @@ const mainMenu = (prevResults) => {
                 name: 'menuChoice',
                 message: 'What would you like to do?',
                 choices: [
-                    { name: 'Department queries', value: departmentMenu },
-                    { name: 'Roles queries', value: rolesMenu },
-                    { name: 'Employees queries', value: employeesMenu },
-                    { name: 'Reports queries', value: reportsMenu },
+                    { name: 'Employees queries...', value: employeesMenu },
+                    { name: 'Roles queries...', value: rolesMenu },
+                    { name: 'Department queries...', value: departmentMenu },
+                    { name: 'Reports queries...', value: reportsMenu },
+                    new inq.Separator(),
                     // { name: 'Debug Query', value: debugQuery },
-                    { name: 'Quit', value: Quit },
+                    { name: 'Quit.', value: Quit },
                 ]
             },
         ]
