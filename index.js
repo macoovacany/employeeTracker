@@ -135,12 +135,14 @@ const addRole = async () => {
     let addRoleDepartment = ''; // referenced in catch block
 
     try {
-        const [dep_results, fields_1] = await conn.execute(
-            'SELECT DEPARTMENT_NAME FROM DEPARTMENTS;');
 
-        const departmentList = dep_results.map(element => {
-            return element.DEPARTMENT_NAME;
+        // deparment list
+        const [dep_results, fields_1] = await conn.execute(
+            'SELECT * FROM DEPARTMENTS;');
+            const departmentList = dep_results.map(element => {
+            return { name: `${element.DEPARTMENT_NAME}`, value: element.ID };
         });
+
 
         // query for input parameters
         const ans = await inq.prompt([
@@ -151,7 +153,7 @@ const addRole = async () => {
             },
             {
                 type: 'list',
-                name: 'addRoleDepartment',
+                name: 'addRoleDepartmentID',
                 message: 'Which department is the new role for?',
                 choices: departmentList
             },
@@ -159,20 +161,19 @@ const addRole = async () => {
                 type: 'number',
                 name: 'addRoleSalary',
                 message: 'What is the salary of the new role?',
-                // validate: (addRoleSalary) => {
-                //     return (addRoleSalary.trim().match(/^[0-9]+$/) != null);
-                // }
+                default: 45000,
             }
         ]);
 
 
         // TODO, make sure values in row are unique
         const [rows, fields] = await conn.execute(
-            `INSERT INTO ROLES (TITLE, SALARY, DEPARTMENT_ID) VALUES
-            ('${ans.addRoleTitle}',
-             ${ans.addRoleSalary},
-              (select id from departments where department_name='${ans.addRoleDepartment}'));`);
-
+         'INSERT INTO ROLES (TITLE, SALARY, DEPARTMENT_ID) VALUES (? , ? , ?);', 
+        [
+        ans.addRoleTitle,
+        ans.addRoleSalary,
+        ans.addRoleDepartmentID
+        ]);
         if (rows.affectedRows === 1) {
             returnStr = `Add role ${ans.addRoleTitle} to the ${ans.addRoleDepartment}.\n`;
             console.clear();
@@ -187,6 +188,7 @@ const addRole = async () => {
         switch (err.errno) {
             case 1064:
                 console.log('Syntax Error in the SQL query. ');
+                console.log(err);
                 Quit();
             default:
                 console.log(err);
@@ -333,11 +335,13 @@ const addEmployee = async () => {
         // }
 
         const [rows, fields_3] = await conn.execute(
-            `INSERT INTO EMPLOYEES (FIRST_NAME, LAST_NAME, ROLES_ID, MANAGER_ID) VALUES
-            ('${ans.addEmployeeFirstname}', 
-            '${ans.addEmployeeLastname}', 
-            ${ans.addEmployeeRole}, 
-            ${ans.addEmployeeManager});`);
+            'INSERT INTO EMPLOYEES (FIRST_NAME, LAST_NAME, ROLES_ID, MANAGER_ID) VALUES ( ? , ? , ?, ? );',
+            [
+                ans.addEmployeeFirstname,
+                ans.addEmployeeLastname,
+                ans.addEmployeeRole,
+                ans.addEmployeeManager
+            ]);
 
         if (rows.affectedRows === 1) {
             returnStr = `Added employee ${ans.addEmployeeFirstname} ${ans.addEmployeelastname}`;
@@ -354,7 +358,7 @@ const addEmployee = async () => {
         console.log(err)
         switch (err.errno) {
             case 1064:
-                console.log('Syntax Error in the SQL query. ');                
+                console.log('Syntax Error in the SQL query. ');
                 Quit();
             default:
                 console.log(err);
