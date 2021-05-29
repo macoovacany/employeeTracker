@@ -91,7 +91,7 @@ __Remove employees__
 
 
 
-
+## Database schema
 
 Design the following database schema containing three tables:
 
