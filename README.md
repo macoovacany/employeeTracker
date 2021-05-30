@@ -4,12 +4,11 @@
 
 This is a homework assignment is to architect and build a solution for managing a company's employees using node, inquirer, and MySQL.
 
- * [Video demonstrating the ]()
+ * [A way of manually seeding the database](https://drive.google.com/file/d/1fkhYfa1cRZLKR0t-4KyE2HlUZYFjFEfT/view)
+ * [An example of the ]()
 
 
 <span style="color:red"> __WARNING__ </span>: the code is __not guaranteed  protected against SQL injection__.  Some protections have been added. 
-
-
 
 ## Application 
 This assignment is to architect and build a solution for managing a company's employees using node, inquirer, and MySQL. The business rules of the database are based on employees having roles, belonging to departments and having managers. Roles are are separated into departments. The following rules are specified:
@@ -68,21 +67,30 @@ The __view employees__ will show a table of:
  
  By default, the employees are sorted by first name. This can not be controlled by the user.
 
-__Change employee's manager__ will provide an interface to change the employees manager.
 
-__Change employee's role__ will provide an interface to change the employees role.
-
-__Remove employees__ will remove an employee. Note that the employees who are managers of other 
+__Remove employee__ will remove an employee. Note that the employees who are managers of other employees will not removed.  To do so, use the _modify manager_ command in the _Change Business Structure_  menu.
 
 
 ### Roles Menu
 <div id="RolesMenu"></div>
 
-__ __
-
 
 ### Departments Menu
 <div id="DepartmentMenu"></div>
+
+
+### Change Business Structure Menu
+<div id="ChangeBusinessMenu"></div>
+
+
+__Modify Employee__ will provide an interface to...
+
+__Modify Manager__ will provide an interface to... 
+
+__Modify role__ will provide an interface...
+
+__Modify Department__ will provide an interface...
+
 
 
 ### Reports
@@ -94,7 +102,7 @@ __ __
 
 
 
-## Database schema
+## Database Schema
 
 Design the following database schema containing three tables:
 
@@ -120,16 +128,33 @@ Design the following database schema containing three tables:
   * **role_id** - INT to hold reference to role employee has
   * **manager_id** - INT to hold reference to another employee that manages the employee being Created. This field may be null if the employee has no manager
   
-## Application dependencies
+## Installation
 
-This is a nodejs application and uses the following npm packages:
+The steps to install the employeeTracker application are:
+1) Ensure NodeJS is installed.
+1) Ensure MySQL server is available on localhost:3306.
+1) Clone or download the GitHub repo.
+1) rename the _.env.EXAMPLE_ file to _.env_ and update the file to suit your application.
+1) Manually seed the database using the files (in this order):
+      1) _application_root_directory_/seed/schema.js
+      1) _application_root_directory_/seed/seed.js
+1) npm install
+1) npm start
+ 
+This NodeJS application uses the following npm packages:
  * dotenv
  * inquirer
  * mysql2
-
-It also requires a mysql server on localhost, listening on port 3306.
-
-## Github Project 
+## TODO:
+1) Double check SQL injection protection.
+1) <span id="seedTroubles"> node script to seed the database automatically</span>. Problems encountered are: 
+    1) Cannot run '_mysql < ./seed/schema.js_' on windows. (mysql.exe is not on the path)
+    1) We __can__ run _"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" --version_ on windows, through the command prompt (note the double quotes). 
+    1) shelljs escapes the string for the folder structure incompatible with calling MySQL through the command prompt. Many, many variations of back ticks, escape slashes and literal strings were tried. 
+    1) Can not run the SQL command _SOURCE ./seed/schema.js_ inside a query from NodeJS.
+    1) The npm package _execsql_ is sus.
+1) Cross link the various modify view options so you are not menu hopping all the time.
+## GitHub Project 
 
 This project is licensed under a MIT license. 
 

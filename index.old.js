@@ -7,7 +7,7 @@ var conn;   // global connection
 const inq = require('inquirer');
 const process = require('process');
 require('dotenv').config();
-// const { AsciiTree } = require('../lib');
+
 
 // create, read, update and delete queries are called
 // add,    view, modify and remove
@@ -37,22 +37,21 @@ const addDepartment = async () => {
             // results are OK
             if (rows.affectedRows === 1) {
                 returnStr = `Added ${newDepartment}.\n`;
-                addMenu(() => {
-                    console.clear();
-                    console.log('--------------------------------------');
+                departmentMenu(() => {
+                    console.log('--------------------------------------')
                     console.log(returnStr);
-                    console.log('--------------------------------------');
+                    console.log('--------------------------------------')
                 });
             }
         } else {
-            addMenu(() => {
+            departmentMenu(() => {
                 console.log('No update to departments.')
             });
         }
     } catch (err) {
         switch (err.errno) {
             case 1062:
-                addMenu(() => {
+                departmentMenu(() => {
                     console.log('Department already exists.');
                 });
                 break;
@@ -73,8 +72,7 @@ const viewDepartments = async () => {
         GROUP BY DEPARTMENT_NAME;`
         );
 
-        viewMenu(() => {
-            console.clear();
+        departmentMenu(() => {
             console.table(rows);
         }
 
@@ -107,46 +105,31 @@ const removeDepartments = async () => {
                 type: 'list',
                 name: 'removeDepartmentSelection',
                 message: 'Which department do you want to remove?',
-                choices:
-                    [...departmentList,
-                    new inq.Separator(),
-                        'Abort Deletion',
-                    new inq.Separator(),
-                    ]
+                choices: departmentList
             }]);
 
         removeDepartment = ans.removeDepartmentSelection;
 
-        if ('Abort Deletion' === removeDepartment) {
-            removeMenu(() => {
-                console.clear();
-                console.log('--------------------------------------');
-                console.log('Aborted Department Deletion');
-                console.log('--------------------------------------');
-            })
-        } else {
-            const [rows, fields_2] = await conn.execute(
-                'DELETE FROM DEPARTMENTS WHERE DEPARTMENT_NAME = ?;',
-                [removeDepartment]);
+        const [rows, fields_2] = await conn.execute(
+            'DELETE FROM DEPARTMENTS WHERE DEPARTMENT_NAME = ?;',
+            [removeDepartment]);
 
-            if (rows.affectedRows === 1) {
-                returnStr = `Removed ${removeDepartment}.\n`;
-                removeMenu(() => {
-                    console.clear();
-                    console.log('--------------------------------------');
-                    console.log(returnStr);
-                    console.log('--------------------------------------');
-                });
-            }
+        if (rows.affectedRows === 1) {
+            returnStr = `Removed ${removeDepartment}.\n`;
+            departmentMenu(() => {
+                console.log('--------------------------------------')
+                console.log(returnStr);
+                console.log('--------------------------------------')
+            });
         }
     } catch (err) {
         switch (err.errno) {
             case 1451:
+                console.log('--------------------------------------')
                 returnStr = `Cannot remove department '${removeDepartment}'. \n Remove associated roles first.`
-                removeMenu(() => {
-                    console.log('--------------------------------------')
+                console.log('--------------------------------------')
+                departmentMenu(() => {
                     console.log(returnStr);
-                    console.log('--------------------------------------')
                 });
                 break;
             default:
@@ -208,13 +191,11 @@ const addRole = async () => {
             ]);
         if (rows.affectedRows === 1) {
             returnStr = `Add role ${ans.addRoleTitle} to the ${ans.addRoleDepartment}.\n`;
-            addMenu(() => {
-                console.clear();
+            rolesMenu(() => {
                 console.log(returnStr);
             });
         } else {
-            addMenu(() => {
-                console.clear();
+            rolesMenu(() => {
                 console.log(rows, fields);
             }
 
@@ -246,10 +227,7 @@ on departments.id = roles.department_id;`;
 
         const [rows, fields] = await conn.execute(
             queryString);
-
-
-        viewMenu(() => {
-            console.clear();
+        rolesMenu(() => {
             console.table(rows);
         });
 
@@ -290,8 +268,7 @@ const removeRoles = async () => {
 
         if (rows.affectedRows === 1) {
             returnStr = `Removed ${removeRole}.\n`;
-            removeMenu(() => {
-                console.clear()
+            rolesMenu(() => {
                 console.log(returnStr);
             });
         }
@@ -299,8 +276,7 @@ const removeRoles = async () => {
         switch (err.errno) {
             case 1451:
                 returnStr = `Cannot remove role '${removeRole}'. \n Remove associated employees first.`
-                removeMenu(() => {
-                    console.clear()
+                rolesMenu(() => {
                     console.log(returnStr);
                 });
                 break;
@@ -318,9 +294,8 @@ const removeRoles = async () => {
 // Role queries
 // **************************
 
-
-
 const addEmployee = async () => {
+
 
     try {
 
@@ -396,13 +371,12 @@ const addEmployee = async () => {
 
         if (rows.affectedRows === 1) {
             returnStr = `Added employee ${ans.addEmployeeFirstname} ${ans.addEmployeelastname}`;
-            addMenu(() => {
-                console.clear();
+            employeesMenu(() => {
                 console.log(returnStr);
             });
         } else {
-            addMenu(() => {
-                console.clear();
+
+            employeesMenu(() => {
                 console.log(rows, fields);
             });
 
@@ -437,13 +411,14 @@ const viewEmployees = async () => {
      left join employees as Man
      on Emp.manager_id = Man.id
      
-     order by emp.last_name; `;
+     order by emp.last_name;
+      
+     `;
 
         const [rows, fields] = await conn.execute(
             queryString);
 
-        viewMenu(() => {
-            console.clear();
+        employeesMenu(() => {
             console.table(rows);
             console.log('Default sort order by last name');
         });
@@ -458,61 +433,11 @@ const viewEmployees = async () => {
 };
 
 
-
-
-const viewEmployeesByManager = async () => {
-
+const viewManagers = async () => {
     try {
-        // const managementTree = new AsciiTree('Managers');
-        managersList = (await getManagers()).rows;
-
-        let orgTree = 'Managers\n';
-
-        const buildOrgTree = async () => {
-            managersList.forEach(async (mngr) => {
-
-
-
-
-                orgTree += '+---+ ' + mngr.manager_name + '\n';
-
-
-
-                const [empRows, empfields] = await conn.execute(
-                    `SELECT concat(employees.first_name, ' ' , employees.last_name) as employee_name
-            FROM employee_tracker_db.employees
-                       where MANAGER_ID = ?;`
-                    , [mngr.manager_id]);
-
-                empRows.forEach((emp) => {
-                    console.log(empRows.employee_name);
-                    orgTree += '   +--- ' + empRows.employee_name + '\n';
-                });
-            });
-            return orgTree;
-        }
-
-        let strOrgTree = await buildOrgTree();
-
-        viewMenu(() => {
-            console.log(strOrgTree);
-        });
-
-    } catch (err) {
-        switch (err.errno) {
-            default:
-                console.log(err.errno);
-                Quit();
-        }
-    }
-};
-
-
-
-const getManagers = async () => {
-    try {
-        const queryString = `select  distinct  
-      Manager.ID as manager_id,
+        queryString =
+            `select  distinct  
+      Manager.ID,
       concat(Manager.first_name, ' ', Manager.last_name) as manager_name
      
       from employees as Emp
@@ -525,32 +450,13 @@ const getManagers = async () => {
      where Emp.manager_id is not null
      
      order by emp.last_name;`
-
+            ;
 
         const [rows, fields] = await conn.execute(
             queryString);
 
-        return { rows, fields };
-
-    } catch (err) {
-        switch (err.errno) {
-            default:
-                console.log(err.errno);
-                Quit();
-        }
-    }
-}
-
-
-const viewManagers = async () => {
-    try {
-
-        const managersQuery = await getManagers()
-
-        viewMenu(() => {
-            console.clear();
-            console.table(managersQuery.rows);
-            console.log('-----------------------------------------')
+        employeesMenu(() => {
+            console.table(rows);
             console.log('Default sort order by last name');
         });
 
@@ -564,78 +470,72 @@ const viewManagers = async () => {
 };
 
 
-const changeEmployeeManager = async () => {
+const modifyEmployeeManager = async () => {
+
 
     try {
-        const [empRows, empFields] = await conn.execute(
-            'SELECT * FROM Employees;');
+        // for managers
+        // assumme anyoen can be a manager
+        const [managers, fields_2] = await conn.execute(
+            'SELECT * FROM EMPLOYEES where isnull(employees.manager_id);');
+        managerList = managers.map(element => {
+            return { name: `${element.FIRST_NAME} ${element.LAST_NAME}`, value: element.ID };
+        });
 
-        const employeeList = empRows.map((emp) => {
-            return {
-                name: emp.FIRST_NAME + ' ' + emp.LAST_NAME,
-                value: emp.ID
-            };
-        })
+
+        // query for input parameters
         const ans = await inq.prompt([
             {
-                type: 'list',
-                name: 'changeEmployee',
-                message: 'Change which employees manager?',
-                choices: [
-                    ...employeeList,
-                    new inq.Separator(),
-                    { name: 'Abort Change', value: -1 },
-                    new inq.Separator(),
-                ]
+                type: 'input',
+                name: 'addEmployeeFirstname',
+                message: 'Employees First Name?'
+            },
+            {
+                type: 'input',
+                name: 'addEmployeeLastname',
+                message: 'Last Name?'
             },
             {
                 type: 'list',
-                name: 'changeManager',
-                message: 'The new manager is...?',
-                choices: [
-                    ...employeeList,
-                    new inq.Separator(),
-                    { name: 'Abort Change', value: -1 },
-                    new inq.Separator(),
-                ]
-            }
+                name: 'addEmployeeRole',
+                message: 'What is the employees role?',
+                choices: rolesList
+            },
+            {
+                type: 'list',
+                name: 'addEmployeeManager',
+                message: 'Who is the employees manager?',
+                choices: [...managerList, { name: 'No manager', value: null }]
+            },
+        ]);
 
-        ])
+        // TODO validation checks
+        // TODO, make sure values in row are unique
+        // TODO: check if the employee is in the same department as the manager 
+        // if (managerID >0){
+        // make sure the manager and employee are in the same department
+        // }
 
-        // if not aborted
-        if (ans.changeEmployee > 0 && ans.changeManager > 0) {
+        const [rows, fields_3] = await conn.execute(
+            `INSERT INTO EMPLOYEES (FIRST_NAME, LAST_NAME, ROLES_ID, MANAGER_ID) VALUES
+            ('${ans.addEmployeeFirstname}', 
+            '${ans.addEmployeeLastname}', 
+            ${ans.addEmployeeRole}, 
+            ${ans.addEmployeeManager});`);
 
-            const [rows, fields_3] = await conn.execute(
-                'update employees set manager_id = ? where id = ?;',
-                [
-                    ans.changeManager,
-                    ans.changeEmployee,
-                ]);
-
-            if (rows.affectedRows === 1) {
-                returnStr = `Updated employee `;
-                changeMenu(() => {
-                    console.clear();
-                    console.log(returnStr);
-                    console.clear('---------------------------------------------------------------');
-                });
-
-            } else {
-                changeMenu(() => {
-                    console.clear();
-                    console.log(rows, fields);
-                });
-            }
+        if (rows.affectedRows === 1) {
+            returnStr = `Added employee ${ans.addEmployeeFirstname} ${ans.addEmployeelastname}`;
+            employeesMenu(() => {
+                console.log(returnStr);
+            });
         } else {
-            changeMenu(() => {
-                console.clear();
-                console.log('Change to employee aborted.');
-                console.clear('---------------------------------------------------------------');
-            })
+            employeesMenu(() => {
+                console.log(rows, fields);
+            });
+
         }
 
     } catch (err) {
-        console.log(err)
         switch (err.errno) {
             case 1064:
                 console.log('Syntax Error in the SQL query. ');
@@ -645,13 +545,12 @@ const changeEmployeeManager = async () => {
                 Quit();
         }
     }
+
 };
 
+const modifyEmployeeRole = async () => {
 
-const changeEmployeeByRole = async () => {
-
-}
-
+};
 
 const removeEmployee = async () => {
 
@@ -687,8 +586,7 @@ const removeEmployee = async () => {
 
         if (rows.affectedRows === 1) {
             returnStr = `Removed ${employeeName}.\n`;
-            removeMenu(() => {
-                console.clear()
+            employeesMenu(() => {
                 console.log(returnStr);
             });
         }
@@ -697,8 +595,7 @@ const removeEmployee = async () => {
             case 1451:
                 returnStr = `Cannot remove employee '${employeeName}.
 Check if this employee is a manager.`
-                removeMenu(() => {
-                    console.clear()
+                employeesMenu(() => {
                     console.log('--------------------------------------')
                     console.log(returnStr);
                     console.log('--------------------------------------\n')
@@ -772,8 +669,8 @@ const viewBudget = async () => {
         const [rows, fields] = await conn.execute(
             queryString);
 
-        viewMenu(() => {
-            console.clear()
+        reportsMenu(() => {
+            console.log('Default sort order by last name');
             console.table(rows);
         });
 
@@ -785,6 +682,170 @@ const viewBudget = async () => {
         }
     }
 };
+
+const viewEmployeesByDepartment = async () => {
+
+    try {
+        queryString = `select  
+        concat(emp.first_name, ' ', emp.last_name) as employee_name, 
+        roles.title , 
+      concat(Man.first_name, ' ', Man.last_name) as manager_name
+     
+      from employees as Emp
+      
+      inner join roles
+     on Emp.roles_id = roles.id
+      
+     left join employees as Man
+     on Emp.manager_id = Man.id
+     
+     order by emp.last_name;
+      
+     `;
+
+        const [rows, fields] = await conn.execute(
+            queryString);
+
+        employeesMenu(() => {
+            console.table(rows);
+            console.log('Default sort order by last name');
+
+        });
+
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
+};
+
+const viewEmployeesByRole = async () => {
+
+    try {
+        queryString = `select  
+        concat(emp.first_name, ' ', emp.last_name) as employee_name, 
+        roles.title , 
+      concat(Man.first_name, ' ', Man.last_name) as manager_name
+     
+      from employees as Emp
+      
+      inner join roles
+     on Emp.roles_id = roles.id
+      
+     left join employees as Man
+     on Emp.manager_id = Man.id
+     
+     order by emp.last_name;
+      
+     `;
+
+        const [rows, fields] = await conn.execute(
+            queryString);
+
+        employeesMenu(() => {
+            console.log('Default sort order by last name');
+            console.table(rows);
+
+        });
+
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
+};
+
+const viewEmployeesByManager = async () => {
+
+    try {
+        queryString = `select  
+        concat(emp.first_name, ' ', emp.last_name) as employee_name, 
+        roles.title , 
+      concat(Man.first_name, ' ', Man.last_name) as manager_name
+     
+      from employees as Emp
+      
+      inner join roles
+     on Emp.roles_id = roles.id
+      
+     left join employees as Man
+     on Emp.manager_id = Man.id
+     
+     order by emp.last_name;
+      
+     `;
+
+        const [rows, fields] = await conn.execute(
+            queryString);
+
+        employeesMenu(() => {
+            console.log('Default sort order by last name');
+            console.table(rows);
+        });
+
+    } catch (err) {
+        switch (err.errno) {
+            default:
+                console.log(err.errno);
+                Quit();
+        }
+    }
+};
+
+const modifyEmployee = async () => {
+    try {
+
+        businessStructureMenu(() => {
+            console.log('** TODO **')
+        });
+    }
+    catch (err) {
+        console.log(err);
+        Quit();
+    }
+}
+const modifyManager = async () => {
+    try {
+
+        businessStructureMenu(() => {
+            console.log('** TODO **')
+        });
+    }
+    catch (err) {
+        console.log(err);
+        Quit();
+    }
+}
+const modifyEmployeesByManager = async () => {
+    try {
+
+        businessStructureMenu(() => {
+            console.log('** TODO **')
+        });
+    }
+    catch (err) {
+        console.log(err);
+        Quit();
+    }
+}
+const modifyEmployeesByRole = async () => {
+    try {
+
+        businessStructureMenu(() => {
+            console.log('** TODO **')
+        });
+    }
+    catch (err) {
+        console.log(err);
+        Quit();
+    }
+}
+
+
 
 const Panic = (err) => {
     console.log('Panic exit - ')
@@ -804,25 +865,20 @@ const Quit = () => {
 // *************************
 //  * Menu options  ********
 // *************************
-const viewMenu = (printFunCallback = () => { }) => {
+const employeesMenu = (printFunCallback = () => { }) => {
+    console.clear();
     printFunCallback();
 
     inq.prompt(
         [{
             type: 'list',
             name: 'menuChoice',
-            message: 'View.. ',
+            message: 'What would you like to do?',
             choices: [
-                { name: ' departments', value: viewDepartments },
-                { name: ' roles', value: viewRoles },
-                { name: ' managers', value: viewManagers },
-                { name: ' employees', value: viewEmployees },
-                new inq.Separator(),
-                // { name: '  employees by role', value: viewEmployeesByRole },
-                // { name: '  employees by manager', value: viewEmployeesByManager },
-                // new inq.Separator(),
-                // { name: '  the Org Chart', value: viewOrgChart },
-                { name: '  the department budgets', value: viewBudget },
+                { name: 'Add employee', value: addEmployee },
+                { name: 'View employees', value: viewEmployees },
+                { name: 'Remove employees', value: removeEmployee },
+                { name: 'View managers', value: viewManagers },
                 new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
@@ -835,18 +891,19 @@ const viewMenu = (printFunCallback = () => { }) => {
 }
 
 
-const addMenu = async (printFunCallback = () => { }) => {
+const rolesMenu = async (printFunCallback = () => { }) => {
+    console.clear();
     printFunCallback();
 
     const ans = await inq.prompt(
         [{
             type: 'list',
             name: 'menuChoice',
-            message: 'Add...',
+            message: 'What would you like to do?',
             choices: [
-                { name: ' a new employee', value: addEmployee },
-                { name: ' a new role', value: addRole },
-                { name: ' a new department', value: addDepartment },
+                { name: 'add role', value: addRole },
+                { name: 'view roles', value: viewRoles },
+                { name: 'remove Roles', value: removeRoles },
                 new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
@@ -857,20 +914,20 @@ const addMenu = async (printFunCallback = () => { }) => {
     ans.menuChoice();
 }
 
-const changeMenu = (printFunCallback = () => { }) => {
-
+const departmentMenu = (printFunCallback = () => { }) => {
+    console.clear();
     printFunCallback();
 
     inq.prompt(
         [{
             type: 'list',
             name: 'menuChoice',
-            message: 'Change ...',
+            message: 'Department Actions:',
             choices: [
-                { name: ' an employee\'s manager ', value: changeEmployeeManager },
-                { name: ' an employee\'s role', value: changeEmployeeByRole },
-                // { name: ' employees by manager', value: modifyManager },
+                { name: 'Add a department', value: addDepartment },
+                { name: 'view departments', value: viewDepartments },
                 // { name: 'modify a department', value: modifyDepartments },
+                { name: 'remove a department', value: removeDepartments },
                 new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
@@ -881,7 +938,7 @@ const changeMenu = (printFunCallback = () => { }) => {
         });
 }
 
-const removeMenu = (printFunCallback = () => { }) => {
+const businessStructureMenu = (printFunCallback = () => { }) => {
     console.clear();
     printFunCallback();
 
@@ -889,11 +946,12 @@ const removeMenu = (printFunCallback = () => { }) => {
         [{
             type: 'list',
             name: 'menuChoice',
-            message: 'Remove ...',
+            message: 'What would you like to do?',
             choices: [
-                { name: ' a department', value: removeDepartments },
-                { name: ' a role', value: removeRoles },
-                { name: ' an employee', value: removeEmployee },
+                { name: 'Change a employee\'s manager or role', value: modifyEmployee },
+                { name: 'Change employees by manager', value: modifyManager },
+                { name: 'Change employees by role', value: modifyEmployeesByManager },
+                { name: 'Change employee\'s by department', value: modifyEmployeesByRole },
                 new inq.Separator(),
                 { name: 'Back to Main Menu', value: mainMenu },
             ]
@@ -906,6 +964,59 @@ const removeMenu = (printFunCallback = () => { }) => {
 }
 
 
+const reportsMenu = (printFunCallback = () => { }) => {
+
+    console.clear();
+    printFunCallback();
+
+    inq.prompt(
+        [{
+            type: 'list',
+            name: 'menuChoice',
+            message: 'What would you like to do?',
+            choices: [
+                { name: 'Show Org Chart', value: viewOrgChart },
+                { name: 'Show department budgets', value: viewBudget },
+                // { name: 'View Employees By Department', value: viewEmployeesByDepartment },
+                // { name: 'View Employees By Role', value: viewEmployeesByRole },
+                { name: 'View Employees By Manager', value: viewEmployeesByManager },
+                new inq.Separator(),
+                { name: 'Back to Main Menu', value: mainMenu },
+            ]
+        },
+        ]
+    )
+        .then((ans) => {
+            ans.menuChoice();
+        });
+}
+
+const debugQuery = () => {
+    conn.query(
+        'SELECT * FROM DEPARTMENTS;',
+        (err, results, fields) => {
+            if (err) throw err;
+            departmentList = results.map(element => {
+                return element.DEPARTMENT_NAME;
+            });
+            inq.prompt([
+                {
+                    type: 'list',
+                    name: 'removeDepartmentSelection',
+                    message: 'Which department do you want to remove?',
+                    choices: departmentList
+                }])
+                .then((ans) => {
+                    conn.query(
+                        'DELETE FROM DEPARTMENTS WHERE DEPARTMENT_NAME = ?;',
+                        ans.removeDepartmentSelection,
+                        (err, results, fields) => {
+                            if (err) throw err;
+                        }
+                    )
+                });
+        })
+};
 
 const mainMenu = (printFunCallback = () => { }) => {
 
@@ -919,10 +1030,12 @@ const mainMenu = (printFunCallback = () => { }) => {
                 name: 'menuChoice',
                 message: 'What would you like to do?',
                 choices: [
-                    { name: 'View... ', value: viewMenu },
-                    { name: 'Add...', value: addMenu },
-                    { name: 'Change...', value: changeMenu },
-                    { name: 'Remove...', value: removeMenu },
+                    { name: 'Employees queries...', value: employeesMenu },
+                    { name: 'Roles queries...', value: rolesMenu },
+                    { name: 'Department queries...', value: departmentMenu },
+                    { name: 'Change business structure...', value: businessStructureMenu },
+
+                    { name: 'Reports queries...', value: reportsMenu },
                     new inq.Separator(),
                     // { name: 'Debug Query', value: debugQuery },
                     { name: 'Quit.', value: Quit },
