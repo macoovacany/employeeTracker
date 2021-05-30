@@ -5,7 +5,7 @@
 This is a homework assignment is to architect and build a solution for managing a company's employees using node, inquirer, and MySQL.
 
  * [A way of manually seeding the database](https://drive.google.com/file/d/1fkhYfa1cRZLKR0t-4KyE2HlUZYFjFEfT/view)
- * [An example of the ]()
+ * [An example of the Employee tracking database in action ](https://drive.google.com/file/d/1wBLq7sPn8lSGkrOsYVBC8rsRwKXJVjc3/view)
 
 
 <span style="color:red"> __WARNING__ </span>: the code is __not guaranteed  protected against SQL injection__.  Some protections have been added. 
@@ -40,24 +40,19 @@ This assignment is to architect and build a solution for managing a company's em
 ## Interface
 ### Main Menu
 The main menu directs the database user to the various sub menus:
- * [Employees...](#EmployeeMenu)
- * [Roles...](#RolesMenu)
- * [Departments...](#DepartmentsMenu)
- * [Reports...](#ReportsMenu)
+ * [View...](#viewMenu)
+ * [Add...](#addMenu)
+ * [Change...](#changeMenu)
+ * [Remove...](#removeMenu)
 
 or to quit the application.
 
 
-### Employee Menu
+### View Menu
 <div id="EmployeeMenu"></div>
 
 The employee menu allows the user to add, view, delete or modify the the employee data. 
 
-When __adding a employee__,
-* _First name_: The first name must be specified, but can be any arbitrary string. 
-* _Last name_: The last name is not required and can be blank.
-* _Employee Role_: Selection from existing roles
-* _Manager_: Optional. Skipping this step will imply the employee does not have a manager.
 
 The __view employees__ will show a table of:
  
@@ -67,40 +62,39 @@ The __view employees__ will show a table of:
  
  By default, the employees are sorted by first name. This can not be controlled by the user.
 
+__viewing a department__  //TODO
+
+__viewing a role__  //TODO
+
+__show org structure__  //TODO: get ascii tree view working properly
+
+### Add Menu
+<div id="addMenu"></div>
+
+When __adding a employee__,
+* _First name_: The first name must be specified, but can be any arbitrary string. 
+* _Last name_: The last name is not required and can be blank.
+* _Employee Role_: Selection from existing roles
+* _Manager_: Optional. Skipping this step will imply the employee does not have a manager.
+
+__adding a department__  //TODO
+
+__adding a role__  //TODO
+
+### Change Menu
+<div id="changeMenu"></div>
+
+__Change employee's manager__  note any current employee can become a new manager.
+
+### Remove Menu
+<div id="renoveMenu"></div>
 
 __Remove employee__ will remove an employee. Note that the employees who are managers of other employees will not removed.  To do so, use the _modify manager_ command in the _Change Business Structure_  menu.
 
 
-### Roles Menu
-<div id="RolesMenu"></div>
+__Remove role__ will provide an interface...
 
-
-### Departments Menu
-<div id="DepartmentMenu"></div>
-
-
-### Change Business Structure Menu
-<div id="ChangeBusinessMenu"></div>
-
-
-__Modify Employee__ will provide an interface to...
-
-__Modify Manager__ will provide an interface to... 
-
-__Modify role__ will provide an interface...
-
-__Modify Department__ will provide an interface...
-
-
-
-### Reports
-<div id="ReportsMenu"></div>
-
- 1) Show the employees under a specific manager.
- 1) Show the employees in a specific department.
- 1) Show the total budget for each department.
-
-
+__Remove Department__ will provide an interface...
 
 ## Database Schema
 
@@ -146,6 +140,7 @@ This NodeJS application uses the following npm packages:
  * inquirer
  * mysql2
 ## TODO:
+1) __ascii tree view of the org structure__
 1) Double check SQL injection protection.
 1) <span id="seedTroubles"> node script to seed the database automatically</span>. Problems encountered are: 
     1) Cannot run '_mysql < ./seed/schema.js_' on windows. (mysql.exe is not on the path)
@@ -154,6 +149,12 @@ This NodeJS application uses the following npm packages:
     1) Can not run the SQL command _SOURCE ./seed/schema.js_ inside a query from NodeJS.
     1) The npm package _execsql_ is sus.
 1) Cross link the various modify view options so you are not menu hopping all the time.
+1) Change employees under a particular manager
+1) Enforce business rules
+    1) no circular arrangements of management
+    1) no removing departments that have roles assigned
+    1) no removing roles that have employees
+
 ## GitHub Project 
 
 This project is licensed under a MIT license. 
